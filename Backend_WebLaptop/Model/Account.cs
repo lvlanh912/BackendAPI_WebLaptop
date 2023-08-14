@@ -17,6 +17,7 @@ namespace Backend_WebLaptop.Model
         public string Fullname { get; set; } = null!;
 
         public string Address { get; set; } = null!;
+
         [BsonRepresentation(BsonType.ObjectId)]
         public string? WardID { get; set; }
 

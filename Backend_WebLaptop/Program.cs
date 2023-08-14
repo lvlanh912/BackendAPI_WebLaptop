@@ -1,4 +1,6 @@
 
+using Backend_WebLaptop.Configs;
+using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Respository;
 
@@ -7,10 +9,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+builder.Services.AddSingleton<IDatabase_Service, Database_Service>();
+builder.Services.Configure<DatabaseConfig>(
+    builder.Configuration.GetSection("Database")
+);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IAccountsRespository, AccountsRespository>();
+builder.Services.AddScoped<IAddressRespository, AddressRespository>();
 
 var app = builder.Build();
 

@@ -6,18 +6,18 @@ using MongoDB.Driver;
 
 namespace Backend_WebLaptop.Respository
 {
-    public class AccountsRespository : Database_Service, IAccountsRespository
+    public class AccountsRespository : IAccountsRespository
     {
         private readonly IMongoCollection<Account>? Accounts;
 
-        public AccountsRespository() : base()
+        public AccountsRespository(IDatabase_Service database_Service) 
         {
-            Accounts = mongoDatabase.GetCollection<Account>("Accounts");
-
+            Accounts = database_Service.Get_Accounts_Collection();
         }
-        public Task DeletebyId(string id)
+        public async Task<bool> DeletebyId(string id)
         {
-            throw new NotImplementedException();
+           var rs= await Accounts.DeleteOneAsync(e => e.Id == id);
+            return rs.DeletedCount!=0;
         }
 
         public Task<bool> Exits(string id)
@@ -36,7 +36,6 @@ namespace Backend_WebLaptop.Respository
             }
             else
                 accounts = await Accounts.Find(filter: e => e.Username!.Contains(keywords) || e.Fullname.Contains(keywords)).ToListAsync();
-
             result.TotalCount = accounts.Count;
             result.Items = accounts.Skip((pageindex - 1) * pagesize);
             result.Items = result.Items.Take(pagesize);
