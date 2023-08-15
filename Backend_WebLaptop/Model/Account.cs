@@ -21,7 +21,7 @@ namespace Backend_WebLaptop.Model
         [BsonRepresentation(BsonType.ObjectId)]
         public string? WardID { get; set; }
 
-        public string Phone { get; set; } = null!;
+        public Int32? Phone { get; set; }
 
         public string Email { get; set; } = null!;
 

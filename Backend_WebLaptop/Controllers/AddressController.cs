@@ -9,8 +9,8 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class AddressController : ControllerBase
     {
-        private readonly IAddressRespository _I;
-        public AddressController(IAddressRespository i)
+        private readonly IAddressRepository _I;
+        public AddressController(IAddressRepository i)
         {
             _I = i;
         }

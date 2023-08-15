@@ -6,11 +6,11 @@ using MongoDB.Driver;
 
 namespace Backend_WebLaptop.Respository
 {
-    public class AccountsRespository : IAccountsRespository
+    public class AccountRepository : IAccountResposytory
     {
         private readonly IMongoCollection<Account>? Accounts;
 
-        public AccountsRespository(IDatabase_Service database_Service) 
+        public AccountRepository(IDatabase_Service database_Service) 
         {
             Accounts = database_Service.Get_Accounts_Collection();
         }
@@ -20,9 +20,10 @@ namespace Backend_WebLaptop.Respository
             return rs.DeletedCount!=0;
         }
 
-        public Task<bool> Exits(string id)
+        public async Task<bool> Exits(string id)
         {
-            throw new NotImplementedException();
+            var rs = await Accounts.FindAsync(e => e.Id == id);
+            return rs == null;
         }
 
         public async Task<PagingResult<Account>> GetAll(string? keywords, int pageindex, int pagesize)

@@ -2,7 +2,7 @@
 
 namespace Backend_WebLaptop.IRespository
 {
-    public interface IAddressRespository
+    public interface IAddressRepository
     {
         Task<List<Province>> GetAllProvince();
         Task<List<District>> GetListDistrict( int ProvinceCode);

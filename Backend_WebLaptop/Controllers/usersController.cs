@@ -9,8 +9,8 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly IAccountsRespository _I;
-        public UsersController(IAccountsRespository i)
+        private readonly IAccountResposytory _I;
+        public UsersController(IAccountResposytory i)
         {
             _I = i;
         }

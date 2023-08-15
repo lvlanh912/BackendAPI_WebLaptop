@@ -5,13 +5,13 @@ using MongoDB.Driver;
 
 namespace Backend_WebLaptop.Respository
 {
-    public class AddressRespository : IAddressRespository
+    public class AddressRepository : IAddressRepository
     {
         private readonly IMongoCollection<Ward>? _Wards;
         private readonly IMongoCollection<Province>? _Provinces;
         private readonly IMongoCollection<District>? _Districts;
 
-        public AddressRespository(IDatabase_Service database_Service)
+        public AddressRepository(IDatabase_Service database_Service)
         {
             _Wards = database_Service.Get_Ward_Collection();
             _Provinces = database_Service.Get_Provinces_Collection();

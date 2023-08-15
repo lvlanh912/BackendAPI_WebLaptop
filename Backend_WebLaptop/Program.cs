@@ -16,8 +16,11 @@ builder.Services.Configure<DatabaseConfig>(
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IAccountsRespository, AccountsRespository>();
-builder.Services.AddScoped<IAddressRespository, AddressRespository>();
+builder.Services.AddScoped<IAccountResposytory, AccountRepository>();
+builder.Services.AddScoped<IAddressRepository, AddressRepository>();
+builder.Services.AddScoped<IShippingAddressRepository, ShippingAddressRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+
 
 var app = builder.Build();
 
