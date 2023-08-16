@@ -1,37 +1,48 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
 {
-    [Route("api/categories")]
+    [Route("api/{ProductId}/comments")]
     [ApiController]
-    public class CategoryController : ControllerBase
+    public class CommentController : ControllerBase
     {
-        private readonly ICategoryRepository _I;
-        public CategoryController(ICategoryRepository i)
+        private readonly ICommentRepository _I;
+        public CommentController(ICommentRepository i)
         {
             _I = i;
         }
         [HttpGet]
-        public async Task<ActionResult> GetList_Category()
-        {
-            return StatusCode(200, new ResponseAPI<List<Category>>
-            {
-                Message = "Success",
-                Result = await _I.GetAll()
-            }) ;
-        }
-        [HttpPost]
-        public async Task<ActionResult> Insert_new( Category entity)
+        public async Task<ActionResult> Get_Commnets_byProductId(int pageindex,int size)
         {
             try
             {
-            return StatusCode(201, new ResponseAPI<Category>
+               string ProductId = this.RouteData.Values["ProductId"]!.ToString()!;
+                return StatusCode(200, new ResponseAPI<PagingResult<Comment>>
             {
-                Message = "Created",
-                Result = await _I.Insert(entity)
-            });
+                Message = "Success",
+                Result = await _I.GetAll(pageindex, ProductId, size)
+            }) ;
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+        [HttpPost]
+        public async Task<ActionResult> Insert_new( Comment entity)
+        {
+            try
+            {
+                string ProductId = this.RouteData.Values["ProductId"]!.ToString()!;
+                entity.ProductId = ProductId;
+                return StatusCode(201, new ResponseAPI<bool>
+                {
+                    Message = "Created",
+                    Result = await _I.Insert(entity)
+                }); ;
             }
             catch
             {
@@ -40,7 +51,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(string id,Category entity)
+        public async Task<ActionResult> Update(string id,Comment entity)
         {
             try
             {

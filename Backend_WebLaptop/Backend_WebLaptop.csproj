@@ -12,4 +12,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Upload\Image\Avatar\" />
+    <Folder Include="Upload\Image\Products\" />
+  </ItemGroup>
+
 </Project>

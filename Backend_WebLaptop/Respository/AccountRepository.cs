@@ -22,8 +22,13 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<bool> Exits(string id)
         {
-            var rs = await Accounts.FindAsync(e => e.Id == id);
-            return rs == null;
+            var rs = await Accounts.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+            return rs != null;
+        }
+        public async Task<bool> ExitsByUserName(string username)
+        {
+            var rs = await Accounts.FindSync(e => e.Username == username).FirstOrDefaultAsync();
+            return rs != null;
         }
 
         public async Task<PagingResult<Account>> GetAll(string? keywords, int pageindex, int pagesize)
@@ -50,15 +55,20 @@ namespace Backend_WebLaptop.Respository
             => await Accounts.Find(e => e.Id == id).FirstOrDefaultAsync();
 
 
-        public async Task<Account> Insert(Account e)
+        public async Task<Account> Insert(Account e, IFormFile? avarta)
         {
-            //validate
-            if (string.IsNullOrWhiteSpace(e.Username) || string.IsNullOrWhiteSpace(e.Password) ||
+            if (string.IsNullOrWhiteSpace(e.Username)|| string.IsNullOrWhiteSpace(e.Password) ||
                 string.IsNullOrWhiteSpace(e.Email))
                 throw new Exception("Data invalid");
-            //
+
+            if(await ExitsByUserName(e.Username))
+                throw new Exception("username has been taken");
+
+            e.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
             e.WardID = new ObjectId(e.WardID).ToString();
+            e.Profile_image =avarta!=null?e.Id+ Path.GetExtension(avarta.FileName):"";
             await Accounts!.InsertOneAsync(e);
+            await Upload_ImageAsync(avarta, e.Id!);
             return e;
         }
 
@@ -83,6 +93,20 @@ namespace Backend_WebLaptop.Respository
 
             await Accounts.FindOneAndReplaceAsync(x => x.Id == entity.Id, entity);
             return entity;
+        }
+
+        async Task<string> Upload_ImageAsync(IFormFile? avarta,string name)
+        {
+            if (avarta==null||!avarta.ContentType.StartsWith("image/"))
+                throw new Exception("This is not Images");
+            string filename = name + Path.GetExtension(avarta.FileName);
+            string path = Path.Combine(Directory.GetCurrentDirectory(),"Upload\\Image\\Avatar",filename);
+            //lưu file
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                await avarta.CopyToAsync(stream);
+            }
+            return "done";
         }
     }
 }

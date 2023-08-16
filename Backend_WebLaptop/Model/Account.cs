@@ -25,7 +25,7 @@ namespace Backend_WebLaptop.Model
 
         public string Email { get; set; } = null!;
 
-        public string Profile_image { get; set; } = null!;
+        public string? Profile_image { get; set; } = null!;
 
         public DateTime? CreateAt { get; set; }=DateTime.Now;
 

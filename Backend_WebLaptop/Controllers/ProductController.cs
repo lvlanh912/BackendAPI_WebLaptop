@@ -4,34 +4,51 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
 {
-    [Route("api/categories")]
+    [Route("api/products")]
     [ApiController]
-    public class CategoryController : ControllerBase
+    public class ProductController : ControllerBase
     {
-        private readonly ICategoryRepository _I;
-        public CategoryController(ICategoryRepository i)
+        private readonly IProductRepository _I;
+        public ProductController(IProductRepository i)
         {
             _I = i;
         }
         [HttpGet]
-        public async Task<ActionResult> GetList_Category()
-        {
-            return StatusCode(200, new ResponseAPI<List<Category>>
-            {
-                Message = "Success",
-                Result = await _I.GetAll()
-            }) ;
-        }
-        [HttpPost]
-        public async Task<ActionResult> Insert_new( Category entity)
+        public async Task<ActionResult> Get_Products(int? pageindex, int? size,string? keywords,string? Brand,
+            string? Category,int? min,int? max)
         {
             try
             {
-            return StatusCode(201, new ResponseAPI<Category>
+                return StatusCode(200, new ResponseAPI<PagingResult<Product>>
+                {
+                    Message = "Success", 
+                    Result = await _I.GetAll(new ProductFilter { 
+                        Brand=Brand,
+                        Keywords=keywords,
+                        Category=Category,
+                        Min_price=min,
+                        Max_price=max
+                    }, pageindex??1, size??10)
+                }); 
+            }
+            catch
             {
-                Message = "Created",
-                Result = await _I.Insert(entity)
-            });
+                return BadRequest();
+            }
+        }
+        [HttpPost]
+        public async Task<ActionResult> Insert_new([FromForm] ImageUpload image)
+        {
+            try
+            {
+               
+                var a = image;
+                /* return StatusCode(201, new ResponseAPI<bool>
+                 {
+                     Message = "Created",
+                     Result = await _I.Insert(entity)
+                 });*/
+                return Ok();
             }
             catch
             {
@@ -40,7 +57,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(string id,Category entity)
+        public async Task<ActionResult> Update(string id,Product entity)
         {
             try
             {

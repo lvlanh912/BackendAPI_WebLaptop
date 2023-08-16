@@ -21,10 +21,16 @@ namespace Backend_WebLaptop.Respository
             return rs.DeletedCount!=0;
         }
 
-        public async Task<bool> Exits(string id)
+        public async Task<bool> Exits(List<string> List_id)
         {
-            var rs = await Categories.FindAsync(e => e.Id == id);
-            return rs == null;
+            //nếu 1 catogery trong danh sách không tồn tại=>false
+           foreach (var id in List_id)
+            {
+                var rs =await  Categories.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+                if (rs == null)
+                    return false;
+            }
+            return true;
         }
 
         public async Task<List<Category>> GetAll() => await Categories.FindSync(e=>true).ToListAsync();

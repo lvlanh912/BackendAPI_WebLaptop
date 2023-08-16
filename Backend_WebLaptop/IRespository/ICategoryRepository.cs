@@ -9,6 +9,6 @@ namespace Backend_WebLaptop.IRespository
         Task<bool> DeletebyId(string id);
         Task<Category> Insert(Category entity);
         Task<bool> Update(Category entity);
-        Task<bool> Exits(string id);
+        Task<bool> Exits(List<string> id);
     }
 }

@@ -8,5 +8,6 @@ namespace Backend_WebLaptop.IRespository
         Task<Comment> GetbyId(string id);
         Task<bool> DeletebyId(string id);
         Task<bool> Insert(Comment entity);
+        Task<bool> Update(Comment entity);
     }
 }

@@ -45,7 +45,17 @@ namespace Backend_WebLaptop.Respository
             }
             return false;
         }
-         async Task<bool> ValidateData(Comment entity)
+        public async Task<bool> Update(Comment entity)
+        {
+            if (await ValidateData(entity))
+            {
+                entity.CreateAt = DateTime.Now;
+                await _Comments.FindOneAndReplaceAsync(e=>e.Id==entity.Id,entity);
+                return true;
+            }
+            return false;
+        }
+        async Task<bool> ValidateData(Comment entity)
         {
             List<bool> result = new()
             {

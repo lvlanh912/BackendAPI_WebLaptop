@@ -15,14 +15,14 @@ namespace Backend_WebLaptop.Controllers
             _I = i;
         }
         [HttpGet]
-        public async Task<ActionResult> GETALL(string? keywords,int pageIndex, int pageSize)
+        public async Task<ActionResult> GETALL(string? keywords, int pageIndex, int pageSize)
         {
             try
             {
                 return StatusCode(200, new ResponseAPI<PagingResult<Account>>
                 {
                     Result = await _I.GetAll(keywords, pageIndex, pageSize),
-                    Message="Success"
+                    Message = "Success"
                 }.Format());
             }
             catch
@@ -31,23 +31,24 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost]
-        public async Task<ActionResult> ADD(Account account)
+        public async Task<ActionResult> ADD([FromForm] ImageUpload? image, [FromForm] Account account)
         {
             try
             {
-                await _I.Insert(account);
-                return StatusCode(201,new ResponseAPI<string> { Message = "Create Success" }.Format());
+                await _I.Insert(account, image!.images != null ? image.images[0] : null);
+                return StatusCode(201, new ResponseAPI<string> { Message = "Create Success" }.Format());
             }
-            catch
+            catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest(new ResponseAPI<string> { Message = ex.Message }.Format());
             }
         }
         [HttpPut]
-        public async Task<ActionResult> UPDATE(Account account)
+        public async Task<ActionResult> UPDATE(Account account,string id)
         {
             try
             {
+                account.Id=id;
                 await _I.Update(account);
                 return StatusCode(200, new ResponseAPI<string> { Message = "Update Successfull" }.Format());
             }
@@ -69,6 +70,7 @@ namespace Backend_WebLaptop.Controllers
                 return NotFound();
             }
         }
+       
     }
 }
 
