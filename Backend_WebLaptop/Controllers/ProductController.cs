@@ -1,6 +1,7 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace Backend_WebLaptop.Controllers
 {
@@ -53,19 +54,22 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost]
-        public async Task<ActionResult> Insert_new([FromForm] ImageUpload<Product> entity)
+        public async Task<ActionResult> Insert_new([FromForm] string data,List<IFormFile>? images)
         {
             try
             {
                 return StatusCode(201, new ResponseAPI<bool>
                 {
                     Message = "Created",
-                    Result = await _I.Insert(entity)
+                    Result = await _I.Insert(new ImageUpload<Product>
+                    {
+                        data = JsonConvert.DeserializeObject<Product>(data),
+                        images = images
+                    })
                 });
             }
             catch(Exception ex)
             {
-               
                 return BadRequest(ex.Message);
             }
         }

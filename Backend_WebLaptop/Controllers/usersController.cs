@@ -1,7 +1,8 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
 using Microsoft.AspNetCore.Mvc;
- using System.Linq;
+using Newtonsoft.Json;
+using System.Linq;
 
 namespace Backend_WebLaptop.Controllers
 {
@@ -48,11 +49,15 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost]
-        public async Task<ActionResult> ADD([FromForm] ImageUpload<Account> entity)
+        public async Task<ActionResult> ADD([FromForm] string data,List<IFormFile>? images)
         {
             try
             {
-                await _I.Insert(entity);
+                await _I.Insert(new ImageUpload<Account>
+                {
+                    data= JsonConvert.DeserializeObject<Account>(data),
+                    images= images
+            });
                 return StatusCode(201, new ResponseAPI<string> { Message = "Create Success" }.Format());
             }
             catch (Exception ex)
@@ -61,17 +66,22 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> UPDATE([FromForm] ImageUpload<Account> entity, string id)
+        public async Task<ActionResult> UPDATE([FromForm] string data, List<IFormFile>? images)
         {
             try
             {
-                entity.data!.Id=id;
-                await _I.Update(entity);
+                var account = JsonConvert.DeserializeObject<Account>(data);
+                account!.Id= this.HttpContext.GetRouteValue("id")!.ToString();
+                await _I.Update(new ImageUpload<Account>
+                {
+                    data= account,
+                    images=images
+            });
                 return StatusCode(200, new ResponseAPI<string> { Message = "Update Successfull" }.Format());
             }
             catch
             {
-                return NotFound();
+                return BadRequest();
             }
         }
         [HttpDelete("{id}")]
