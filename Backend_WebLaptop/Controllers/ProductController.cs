@@ -53,20 +53,20 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost]
-        public async Task<ActionResult> Insert_new([FromForm] ImageUpload imageUpload, [FromForm] Product entity)
+        public async Task<ActionResult> Insert_new([FromForm] ImageUpload<Product> entity)
         {
             try
             {
                 return StatusCode(201, new ResponseAPI<bool>
                 {
                     Message = "Created",
-                    Result = await _I.Insert(entity, imageUpload)
+                    Result = await _I.Insert(entity)
                 });
             }
-            catch
+            catch(Exception ex)
             {
-               // Console.WriteLine(e.Message);
-                return BadRequest();
+               
+                return BadRequest(ex.Message);
             }
         }
         [HttpPut("{id}")]

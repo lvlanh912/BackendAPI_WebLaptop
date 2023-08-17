@@ -52,51 +52,47 @@ namespace Backend_WebLaptop.Respository
             //var a = await Users.Find(_ => true).ToListAsync();
             return result;
         }
-
         public async Task<Account> GetbyId(string id)
             => await Accounts.Find(e => e.Id == id).FirstOrDefaultAsync();
-
-
-        public async Task<Account> Insert(Account e, ImageUpload? imageUpload)
+        public async Task<Account> Insert(ImageUpload<Account> entity)
         {
-            if (string.IsNullOrWhiteSpace(e.Username)|| string.IsNullOrWhiteSpace(e.Password) ||
-                string.IsNullOrWhiteSpace(e.Email))
+            if (string.IsNullOrWhiteSpace(entity.data!.Username)|| string.IsNullOrWhiteSpace(entity.data.Password) ||
+                string.IsNullOrWhiteSpace(entity.data.Email))
                 throw new Exception("Data invalid");
-
-            if(await ExitsByUserName(e.Username))
+            if(await ExitsByUserName(entity.data.Username))
                 throw new Exception("username has been taken");
-
-            e.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
-            e.WardID = new ObjectId(e.WardID).ToString();
-            e.Profile_image = await _Upload.UploadProfile_Image(imageUpload!, e.Id);
-            await Accounts!.InsertOneAsync(e);
+            entity.data.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
+            entity.data.WardID = new ObjectId(entity.data.WardID).ToString();
+            if(entity.images != null)
+            entity.data.Profile_image = await _Upload.UploadProfile_Image(entity);
+            await Accounts!.InsertOneAsync(entity.data);
             
-            return e;
+            return entity.data;
         }
-        public async Task<Account> Update(Account entity, ImageUpload? imageUpload)
+        public async Task<Account> Update(ImageUpload<Account> entity)
         {
-            var curent = await GetbyId(entity.Id!);
+            var curent = await GetbyId(entity.data!.Id!);
             if (curent == null)
             {
                 throw new Exception("This record does not exits");
             }
-            entity.Username = curent.Username;//cannot update username
-            entity.Password ??= curent.Password;
-            entity.Email ??= curent.Email;
-            entity.Address ??= curent.Address;
-            entity.Roles ??= curent.Roles;
-            entity.CreateAt = curent.CreateAt;
-            entity.WardID ??= curent.WardID;
-            entity.Sex ??= curent.Sex;
-            entity.Phone ??= curent.Phone;
-            if (imageUpload != null)
+            entity.data.Username = curent.Username;//cannot update username
+            entity.data.Password ??= curent.Password;
+            entity.data.Email ??= curent.Email;
+            entity.data.Address ??= curent.Address;
+            entity.data.Roles ??= curent.Roles;
+            entity.data.CreateAt = curent.CreateAt;
+            entity.data.WardID ??= curent.WardID;
+            entity.data.Sex ??= curent.Sex;
+            entity.data.Phone ??= curent.Phone;
+            if (entity.images != null)
             {
-                entity.Profile_image =await _Upload.UploadProfile_Image(imageUpload, curent.Id!);
+                entity.data.Profile_image =await _Upload.UploadProfile_Image(entity);
             }
             else
-                entity.Profile_image = curent.Profile_image;
-            await Accounts.FindOneAndReplaceAsync(x => x.Id == entity.Id, entity);
-            return entity;
+                entity.data.Profile_image = curent.Profile_image;
+            await Accounts.FindOneAndReplaceAsync(x => x.Id == entity.data.Id, entity.data);
+            return entity.data;
         }
 
     }

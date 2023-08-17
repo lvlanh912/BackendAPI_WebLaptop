@@ -40,18 +40,18 @@ namespace Backend_WebLaptop.Respository
         }
         public async Task<Product> GetbyId(string id)=>  await _Products.FindSync(e => e.Id == id).FirstOrDefaultAsync();
 
-        public async Task<bool> Insert(Product entity,ImageUpload imageUpload)
+        public async Task<bool> Insert(ImageUpload<Product> entity)
         {
-            entity.Id= ObjectId.GenerateNewId(DateTime.Now).ToString();
-            if (imageUpload.images == null)
+            entity.data!.Id= ObjectId.GenerateNewId(DateTime.Now).ToString();
+            if (entity.images == null)
                 throw new Exception("please add image");
-            entity.Images =await _Upload.UploadProduct_Image(imageUpload, entity.Id);
-            entity.CreateAt = DateTime.Now;
-            entity.Sold = 0;//đã bán = 0
-            entity.View = 0;//lượt xem = 0
-            if (await ValidateData(entity))
+            entity.data.Images =await _Upload.UploadProduct_Image(entity);
+            entity.data.CreateAt = DateTime.Now;
+            entity.data.Sold = 0;//đã bán = 0
+            entity.data.View = 0;//lượt xem = 0
+            if (await ValidateData(entity.data))
             {
-                await _Products.InsertOneAsync(entity);
+                await _Products.InsertOneAsync(entity.data);
                 return true;
             }
             return false;

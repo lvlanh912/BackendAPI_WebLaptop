@@ -48,11 +48,11 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost]
-        public async Task<ActionResult> ADD([FromForm] ImageUpload? image, [FromForm] Account account)
+        public async Task<ActionResult> ADD([FromForm] ImageUpload<Account> entity)
         {
             try
             {
-                await _I.Insert(account, image!);
+                await _I.Insert(entity);
                 return StatusCode(201, new ResponseAPI<string> { Message = "Create Success" }.Format());
             }
             catch (Exception ex)
@@ -61,12 +61,12 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> UPDATE([FromForm] ImageUpload? image, [FromForm] Account account, string id)
+        public async Task<ActionResult> UPDATE([FromForm] ImageUpload<Account> entity, string id)
         {
             try
             {
-                account.Id=id;
-                await _I.Update(account, image);
+                entity.data!.Id=id;
+                await _I.Update(entity);
                 return StatusCode(200, new ResponseAPI<string> { Message = "Update Successfull" }.Format());
             }
             catch
