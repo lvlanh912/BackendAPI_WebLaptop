@@ -9,10 +9,12 @@ namespace Backend_WebLaptop.Respository
     public class AccountRepository : IAccountResposytory
     {
         private readonly IMongoCollection<Account>? Accounts;
+        private IUploadImageRepository _Upload;
 
-        public AccountRepository(IDatabase_Service database_Service) 
+        public AccountRepository(IDatabase_Service database_Service, IUploadImageRepository Upload)
         {
             Accounts = database_Service.Get_Accounts_Collection();
+            _Upload = Upload;
         }
         public async Task<bool> DeletebyId(string id)
         {
@@ -41,7 +43,7 @@ namespace Backend_WebLaptop.Respository
                 accounts = await Accounts.Find(_ => true).ToListAsync();
             }
             else
-                accounts = await Accounts.Find(filter: e => e.Username!.Contains(keywords) || e.Fullname.Contains(keywords)).ToListAsync();
+                accounts = await Accounts.Find(filter: e => e.Username!.Contains(keywords) || e.Fullname!.Trim().Contains(keywords)).ToListAsync();
             result.TotalCount = accounts.Count;
             result.Items = accounts.Skip((pageindex - 1) * pagesize);
             result.Items = result.Items.Take(pagesize);
@@ -55,7 +57,7 @@ namespace Backend_WebLaptop.Respository
             => await Accounts.Find(e => e.Id == id).FirstOrDefaultAsync();
 
 
-        public async Task<Account> Insert(Account e, IFormFile? avarta)
+        public async Task<Account> Insert(Account e, ImageUpload? imageUpload)
         {
             if (string.IsNullOrWhiteSpace(e.Username)|| string.IsNullOrWhiteSpace(e.Password) ||
                 string.IsNullOrWhiteSpace(e.Email))
@@ -66,13 +68,12 @@ namespace Backend_WebLaptop.Respository
 
             e.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
             e.WardID = new ObjectId(e.WardID).ToString();
-            e.Profile_image =avarta!=null?e.Id+ Path.GetExtension(avarta.FileName):"";
+            e.Profile_image = await _Upload.UploadProfile_Image(imageUpload!, e.Id);
             await Accounts!.InsertOneAsync(e);
-            await Upload_ImageAsync(avarta, e.Id!);
+            
             return e;
         }
-
-        public async Task<Account> Update(Account entity)
+        public async Task<Account> Update(Account entity, ImageUpload? imageUpload)
         {
             var curent = await GetbyId(entity.Id!);
             if (curent == null)
@@ -80,7 +81,6 @@ namespace Backend_WebLaptop.Respository
                 throw new Exception("This record does not exits");
             }
             entity.Username = curent.Username;//cannot update username
-
             entity.Password ??= curent.Password;
             entity.Email ??= curent.Email;
             entity.Address ??= curent.Address;
@@ -89,24 +89,15 @@ namespace Backend_WebLaptop.Respository
             entity.WardID ??= curent.WardID;
             entity.Sex ??= curent.Sex;
             entity.Phone ??= curent.Phone;
-            entity.Profile_image ??= curent.Profile_image;
-
+            if (imageUpload != null)
+            {
+                entity.Profile_image =await _Upload.UploadProfile_Image(imageUpload, curent.Id!);
+            }
+            else
+                entity.Profile_image = curent.Profile_image;
             await Accounts.FindOneAndReplaceAsync(x => x.Id == entity.Id, entity);
             return entity;
         }
 
-        async Task<string> Upload_ImageAsync(IFormFile? avarta,string name)
-        {
-            if (avarta==null||!avarta.ContentType.StartsWith("image/"))
-                throw new Exception("This is not Images");
-            string filename = name + Path.GetExtension(avarta.FileName);
-            string path = Path.Combine(Directory.GetCurrentDirectory(),"Upload\\Image\\Avatar",filename);
-            //lưu file
-            using (var stream = new FileStream(path, FileMode.Create))
-            {
-                await avarta.CopyToAsync(stream);
-            }
-            return "done";
-        }
     }
 }

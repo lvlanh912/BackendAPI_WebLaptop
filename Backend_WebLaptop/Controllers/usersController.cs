@@ -30,12 +30,29 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest();
             }
         }
+        [HttpGet("{id}")]
+        public async Task<ActionResult> GetById(string id)
+        {
+            try
+            {
+                var rs = await _I.GetbyId(id);
+                return StatusCode(200, new ResponseAPI<Account>
+                {
+                    Result = rs,
+                    Message = rs != null? "Success":"Invalid user"
+                }.Format()) ;
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
         [HttpPost]
         public async Task<ActionResult> ADD([FromForm] ImageUpload? image, [FromForm] Account account)
         {
             try
             {
-                await _I.Insert(account, image!.images != null ? image.images[0] : null);
+                await _I.Insert(account, image!);
                 return StatusCode(201, new ResponseAPI<string> { Message = "Create Success" }.Format());
             }
             catch (Exception ex)
@@ -43,13 +60,13 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseAPI<string> { Message = ex.Message }.Format());
             }
         }
-        [HttpPut]
-        public async Task<ActionResult> UPDATE(Account account,string id)
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UPDATE([FromForm] ImageUpload? image, [FromForm] Account account, string id)
         {
             try
             {
                 account.Id=id;
-                await _I.Update(account);
+                await _I.Update(account, image);
                 return StatusCode(200, new ResponseAPI<string> { Message = "Update Successfull" }.Format());
             }
             catch
@@ -57,7 +74,7 @@ namespace Backend_WebLaptop.Controllers
                 return NotFound();
             }
         }
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> DELETE(string id)
         {
             try

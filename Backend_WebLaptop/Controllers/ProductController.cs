@@ -36,19 +36,32 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest();
             }
         }
-        [HttpPost]
-        public async Task<ActionResult> Insert_new([FromForm] ImageUpload image)
+        [HttpGet("id")]
+        public async Task<ActionResult> GetById(string id)
         {
             try
             {
-               
-                var a = image;
-                /* return StatusCode(201, new ResponseAPI<bool>
-                 {
-                     Message = "Created",
-                     Result = await _I.Insert(entity)
-                 });*/
-                return Ok();
+                return StatusCode(200, new ResponseAPI<Product>
+                {
+                    Message = "Success",
+                    Result = await _I.GetbyId(id)
+                });
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+        [HttpPost]
+        public async Task<ActionResult> Insert_new([FromForm] ImageUpload imageUpload, [FromForm] Product entity)
+        {
+            try
+            {
+                return StatusCode(201, new ResponseAPI<bool>
+                {
+                    Message = "Created",
+                    Result = await _I.Insert(entity, imageUpload)
+                });
             }
             catch
             {

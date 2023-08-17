@@ -22,6 +22,7 @@ builder.Services.AddScoped<IShippingAddressRepository, ShippingAddressRepository
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IUploadImageRepository, UploadImageRepository>();
 
 
 var app = builder.Build();

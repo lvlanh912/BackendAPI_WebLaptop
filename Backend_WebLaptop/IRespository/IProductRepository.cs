@@ -7,7 +7,7 @@ namespace Backend_WebLaptop.IRespository
         Task<PagingResult<Product>> GetAll(ProductFilter? filter,int pageindex, int pagesize);//get all products
         Task<Product> GetbyId(string id);
         Task<bool> DeletebyId(string id);
-        Task<bool> Insert(Product entity);
+        Task<bool> Insert(Product entity,ImageUpload imageUpload);
         Task<bool> Update(Product entity);
         Task<bool> Exits(string id);
     }

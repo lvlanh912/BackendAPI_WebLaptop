@@ -34,7 +34,11 @@ namespace Backend_WebLaptop.Model
 
         public double? Weight { get; set; }
 
-        public List<Dictionary<string,string>>? Special { get; set; }
-
+        public List<Speacial>? Special { get; set; }
+    }
+    public class Speacial
+    {
+        public string? k { get; set; }
+        public string? v { get; set; }
     }
 }

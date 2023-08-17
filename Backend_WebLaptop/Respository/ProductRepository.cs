@@ -1,6 +1,7 @@
 ﻿using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Backend_WebLaptop.Respository
@@ -9,10 +10,12 @@ namespace Backend_WebLaptop.Respository
     {
         private readonly IMongoCollection<Product> _Products;
         private readonly ICategoryRepository _Category;
-        public ProductRepository(IDatabase_Service dataBase_Service, ICategoryRepository category)
+        private readonly IUploadImageRepository _Upload ;
+        public ProductRepository(IDatabase_Service dataBase_Service, ICategoryRepository category, IUploadImageRepository upload)
         {
             _Products = dataBase_Service.Get_Products_Collection();
             _Category = category;
+            _Upload = upload;
         }
         public async Task<bool> DeletebyId(string id)
         {
@@ -37,8 +40,12 @@ namespace Backend_WebLaptop.Respository
         }
         public async Task<Product> GetbyId(string id)=>  await _Products.FindSync(e => e.Id == id).FirstOrDefaultAsync();
 
-        public async Task<bool> Insert(Product entity)
+        public async Task<bool> Insert(Product entity,ImageUpload imageUpload)
         {
+            entity.Id= ObjectId.GenerateNewId(DateTime.Now).ToString();
+            if (imageUpload.images == null)
+                throw new Exception("please add image");
+            entity.Images =await _Upload.UploadProduct_Image(imageUpload, entity.Id);
             entity.CreateAt = DateTime.Now;
             entity.Sold = 0;//đã bán = 0
             entity.View = 0;//lượt xem = 0
@@ -118,12 +125,13 @@ namespace Backend_WebLaptop.Respository
                 entity.Images!=null&&  entity.Images.Count>=1,
                 entity.Sold>=0,
                 !string.IsNullOrWhiteSpace(entity.ProductName),
-                entity.Special!=null
+                entity.Special!=null&&entity.Special.Count>0
             };
             foreach (var item in list)
                 if (item == false)
                     return false;
             return true;
         }
+        
     }
 }
