@@ -14,6 +14,7 @@ namespace Backend_WebLaptop.Database
         IMongoCollection<Category> Get_Categories_Collection();
         IMongoCollection<Comment> Get_Comments_Collection();
         IMongoCollection<Cart> Get_Carts_Collection();
+        IMongoCollection<Voucher> Get_Vouchers_Collection();
 
     }
 }
