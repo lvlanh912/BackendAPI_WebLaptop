@@ -10,10 +10,12 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly IAccountResposytory _I;
-        public UsersController(IAccountResposytory i)
+        private readonly IAccountRepository _I;
+        private readonly ICartRepository _Cart;
+        public UsersController(IAccountRepository i, ICartRepository cart)
         {
             _I = i;
+            _Cart = cart;
         }
         [HttpGet]
         public async Task<ActionResult> GETALL(string? keywords, int pageIndex, int pageSize)
@@ -53,11 +55,12 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                await _I.Insert(new ImageUpload<Account>
+              var a=  await _I.Insert(new ImageUpload<Account>
                 {
                     data= JsonConvert.DeserializeObject<Account>(data),
                     images= images
-            });
+                });
+                await _Cart.Create(a.Id!);
                 return StatusCode(201, new ResponseAPI<string> { Message = "Create Success" }.Format());
             }
             catch (Exception ex)

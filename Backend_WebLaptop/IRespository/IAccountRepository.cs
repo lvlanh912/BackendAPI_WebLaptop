@@ -2,7 +2,7 @@
 
 namespace Backend_WebLaptop.IRespository
 {
-    public interface IAccountResposytory
+    public interface IAccountRepository
     {
         Task<PagingResult<Account>> GetAll(string? keywords, int pageindex, int pagesize);
         Task<Account> GetbyId(string id);

@@ -16,6 +16,7 @@ namespace Backend_WebLaptop.Database
         private readonly IMongoCollection<Product> _products;
         private readonly IMongoCollection<Category> _categories;
         private readonly IMongoCollection<Comment> _comments;
+        private readonly IMongoCollection<Cart> _carts;
 
         public Database_Service(IOptions<DatabaseConfig> _Databaseconfig)
         {
@@ -29,6 +30,7 @@ namespace Backend_WebLaptop.Database
             _products = mongoDatabase.GetCollection<Product>(_Databaseconfig.Value.Products_Collections);
             _categories= mongoDatabase.GetCollection<Category>(_Databaseconfig.Value.Category_Collections);
             _comments = mongoDatabase.GetCollection<Comment>(_Databaseconfig.Value.Comments_Collections);
+            _carts= mongoDatabase.GetCollection<Cart>(_Databaseconfig.Value.Carts_Collections);
         }
 
         public IMongoCollection<Account> Get_Accounts_Collection() => _accounts;
@@ -39,6 +41,6 @@ namespace Backend_WebLaptop.Database
         public IMongoCollection<Product> Get_Products_Collection()=> _products;
         public IMongoCollection<Category> Get_Categories_Collection()=> _categories;
         public IMongoCollection<Comment> Get_Comments_Collection()=> _comments;
-       
+        public IMongoCollection<Cart> Get_Carts_Collection() => _carts;
     }
 }

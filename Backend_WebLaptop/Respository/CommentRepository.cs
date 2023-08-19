@@ -8,9 +8,9 @@ namespace Backend_WebLaptop.Respository
     public class CommentRepository : ICommentRepository
     {
         private readonly IMongoCollection<Comment> _Comments;
-        private readonly IAccountResposytory _Accounts;
+        private readonly IAccountRepository _Accounts;
         private readonly IProductRepository _Products;
-        public CommentRepository(IDatabase_Service database_Service, IAccountResposytory Accounts,IProductRepository Products)
+        public CommentRepository(IDatabase_Service database_Service, IAccountRepository Accounts,IProductRepository Products)
         {
             _Comments=database_Service.Get_Comments_Collection();
             _Accounts = Accounts;

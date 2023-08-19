@@ -13,6 +13,7 @@ namespace Backend_WebLaptop.Database
         IMongoCollection<Product> Get_Products_Collection();
         IMongoCollection<Category> Get_Categories_Collection();
         IMongoCollection<Comment> Get_Comments_Collection();
+        IMongoCollection<Cart> Get_Carts_Collection();
 
     }
 }

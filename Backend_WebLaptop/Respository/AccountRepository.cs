@@ -6,10 +6,10 @@ using MongoDB.Driver;
 
 namespace Backend_WebLaptop.Respository
 {
-    public class AccountRepository : IAccountResposytory
+    public class AccountRepository : IAccountRepository
     {
         private readonly IMongoCollection<Account>? Accounts;
-        private IUploadImageRepository _Upload;
+        private readonly IUploadImageRepository _Upload;
 
         public AccountRepository(IDatabase_Service database_Service, IUploadImageRepository Upload)
         {
@@ -52,8 +52,8 @@ namespace Backend_WebLaptop.Respository
             //var a = await Users.Find(_ => true).ToListAsync();
             return result;
         }
-        public async Task<Account> GetbyId(string id)
-            => await Accounts.Find(e => e.Id == id).FirstOrDefaultAsync();
+        public async Task<Account> GetbyId(string id)=> await Accounts.Find(e => e.Id == id).FirstOrDefaultAsync();
+
         public async Task<Account> Insert(ImageUpload<Account> entity)
         {
             if (string.IsNullOrWhiteSpace(entity.data!.Username)|| string.IsNullOrWhiteSpace(entity.data.Password) ||
@@ -66,7 +66,7 @@ namespace Backend_WebLaptop.Respository
             if(entity.images != null)
             entity.data.Profile_image = await _Upload.UploadProfile_Image(entity);
             await Accounts!.InsertOneAsync(entity.data);
-            
+            //khởi tạo giỏ hàng
             return entity.data;
         }
         public async Task<Account> Update(ImageUpload<Account> entity)
