@@ -12,13 +12,13 @@ namespace Backend_WebLaptop.Model
         [BsonElement("Min_apply")]
         public int? MinApply { get; set; }
         public int? Value { get; set; } 
-        public bool IsValue { get; set; }
+        public bool? IsValue { get; set; }
         public int? MaxReduce { get; set; } 
         public int? Quantity { get; set; }
         public DateTime? CreateAt { get; set; } 
         public DateTime? StartAt { get; set; }
         public DateTime? EndAt { get; set; }
-        public bool IsDelete { get; set; }=false;
+        public bool IsDisable { get; set; }=false;
     }
     
 }

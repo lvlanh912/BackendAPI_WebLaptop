@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
 {
-    [Route("api/voucher")]
+    [Route("api/vouchers")]
     [ApiController]
     public class VoucherController : ControllerBase
     {
@@ -13,8 +13,60 @@ namespace Backend_WebLaptop.Controllers
         {
             _I = i;
         }
-      
-        [HttpPost("add")]
+        [HttpGet]
+        public async Task<ActionResult> Getall(string? keywords,int pageindex=1,int pagesize=10,bool disable=false)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseAPI<PagingResult<Voucher>>
+                {
+                    Message = "Success",
+                    Result = await _I.GetAllVouchers(keywords,pagesize, pageindex, disable)
+                });
+            }
+            catch(Exception ex)
+            {
+                 Console.WriteLine(ex.Message);
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult> Getbyid(string id)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseAPI<Voucher>
+                {
+                    Message = "Success",
+                    Result = await _I.GetVoucherbyId(id)
+                }) ;
+            }
+            catch
+            {
+                // Console.WriteLine(e.Message);
+                return BadRequest();
+            }
+        }
+        [HttpGet("GetbyCode")]
+        public async Task<ActionResult> GetbyCode(string Code)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseAPI<Voucher>
+                {
+                    Message = "Success",
+                    Result = await _I.GetVoucherbyCode(Code)
+                });
+            }
+            catch
+            {
+                // Console.WriteLine(e.Message);
+                return BadRequest();
+            }
+        }
+
+        [HttpPost]
         public async Task<ActionResult> Insert_new(Voucher entity)
         {
             try
@@ -25,10 +77,9 @@ namespace Backend_WebLaptop.Controllers
                     Result = await _I.CreateVoucher(entity)
                 });
             }
-            catch
+            catch(Exception ex)
             {
-               // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
         }
         [HttpPut("{id}")]
@@ -42,12 +93,43 @@ namespace Backend_WebLaptop.Controllers
                     Result = await _I.EditVoucher(entity, id)
                 });
             }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost("disable")]
+        public async Task<ActionResult> disable(string voucherID)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseAPI<string>
+                {
+                    Message = await _I.DisableVoucher(voucherID) ? "sucess" : "failed"
+                }) ;
+            }
             catch
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();
             }
         }
-       
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> delete(string id)
+        {
+            try
+            {
+                var rs = await _I.DeleteVoucher(id);
+                if (rs)
+                    return StatusCode(200, new ResponseAPI<string> { Message = "success" }.Format());
+                return StatusCode(400, new ResponseAPI<string> { Message = "Something is error" }.Format());
+            }
+            catch
+            {
+                // Console.WriteLine(e.Message);
+                return BadRequest();
+            }
+        }
+
     }
 }

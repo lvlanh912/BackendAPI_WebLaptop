@@ -9,12 +9,10 @@ namespace Backend_WebLaptop.IRespository
         //lấy thông tin Voucher
         Task<Voucher> GetVoucherbyId(string voucherId);
         Task<Voucher> GetVoucherbyCode(string voucherCode);
-        Task<PagingResult<Voucher>> GetAllVouchers(int PageSize=10,int pageindex=1);
+        Task<PagingResult<Voucher>> GetAllVouchers(string? keywords,int PageSize,int pageindex,bool isDisable);
         //sửa thông tin voucher
         Task<Voucher> EditVoucher(Voucher entity, string voucherId);
-        /*xoá voucher
-         * sẽ không thực hiện xoá trong database chỉ đặt giá trị vào biến
-        */
+        Task<bool> DisableVoucher(string voucherId);
         Task<bool> DeleteVoucher(string voucherId);
     }
 }

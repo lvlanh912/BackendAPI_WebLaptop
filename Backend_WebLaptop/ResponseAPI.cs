@@ -5,8 +5,9 @@ namespace Backend_WebLaptop
 {
     public class ResponseAPI<T>
     {
-        public T? Result { get; set; }
         public string? Message { get; set; }
+        public T? Result { get; set; }
+      
     public string Format()
     {
         var settings = new JsonSerializerSettings

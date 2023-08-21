@@ -17,5 +17,7 @@
         public string? Payments_Collections { get; set; }
         public string? StatusOrder_Collections { get; set; }
         public string? Vouchers_Collections { get; set;}
+        public string? StatusOrderings_Collections { get; set; }
+
     }
 }
