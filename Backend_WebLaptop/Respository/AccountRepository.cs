@@ -44,7 +44,6 @@ namespace Backend_WebLaptop.Respository
             }
             else
                 accounts = await Accounts.Find(filter: e => e.Username!.Contains(keywords) || e.Fullname!.Trim().Contains(keywords)).ToListAsync();
-            result.TotalCount = accounts.Count;
             result.Items = accounts.Skip((pageindex - 1) * pagesize);
             result.Items = result.Items.Take(pagesize);
             result.PageIndex = pageindex;

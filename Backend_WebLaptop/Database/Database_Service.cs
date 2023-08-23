@@ -51,8 +51,8 @@ namespace Backend_WebLaptop.Database
         public IMongoCollection<Cart> Get_Carts_Collection() => _carts;
         public IMongoCollection<Voucher> Get_Vouchers_Collection() => _vouchers;
         public IMongoCollection<StatusOrdering> Get_StatusOrderings_Collection() => _statusOrdering;
-        public IMongoCollection<Order> Get_Orders_Collection()=>_orders;
         public IMongoCollection<Payment> Get_Payments_Collections() => _payments;
+        public IMongoCollection<Order> Get_Orders_Collection()=>_orders;
        
     }
 }

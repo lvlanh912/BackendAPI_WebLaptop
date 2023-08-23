@@ -13,7 +13,7 @@ namespace Backend_WebLaptop.Model
         [BsonElement("Max_Price")]
         public Int32? MaxPrice { get; set; }  
 
-        public Int32? Price { get; set; }
+        public Int32 Price { get; set; }
 
         public DateTime CreateAt { get; set; }
 

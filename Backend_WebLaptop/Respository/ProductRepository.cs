@@ -17,6 +17,25 @@ namespace Backend_WebLaptop.Respository
             _Category = category;
             _Upload = upload;
         }
+       
+
+
+        //cập nhật số lượng bán
+        public async Task<bool> DecreaseQuantity(List<OrderItem> items)
+        {
+            
+            // giảm số lượng hàng trong kho, tăng số lượng đã bán của các sản phẩm
+            var task = new List<Task>();
+            var filter = Builders<Product>.Filter;
+           foreach (var item in items)
+            {
+              var update = Builders<Product>.Update.Inc(e => e.Sold, item.Quantity).Inc(e => e.Stock, -item.Quantity);
+                task.Add(_Products.FindOneAndUpdateAsync(e => e.Id == item.ProductID, update));
+            }
+            await Task.WhenAll(task);
+            return true;
+        }
+
         public async Task<bool> DeletebyId(string id)
         {
             var rs = await _Products.DeleteOneAsync(e => e.Id == id);
@@ -132,6 +151,22 @@ namespace Backend_WebLaptop.Respository
                     return false;
             return true;
         }
-        
+
+        public async Task<bool> Cansell(List<OrderItem> items)
+        {
+            //kiểm tra
+            foreach (var item in items)
+            {
+
+               if(!await Cansell_Item(item.ProductID!,item.Quantity))
+                    throw new Exception($"{item.ProductID} không có đủ số lượng để bán");
+            }
+            return true;
+        }
+        async Task<bool>Cansell_Item (string id, int quantity)
+        {
+            var curent_product = await _Products.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+            return curent_product.Stock - quantity >= 0;
+        }
     }
 }

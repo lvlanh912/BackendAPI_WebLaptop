@@ -19,6 +19,8 @@ namespace Backend_WebLaptop.Respository
             if (!Validate(entity))
                 throw new Exception("Invalid data");
             entity.Code = entity.Code!.ToUpper().Replace(" ", String.Empty);
+            if (entity.IsValue)
+                entity.MaxReduce = entity.Value;
             await Vouchers.InsertOneAsync(entity);
             return entity;
         }
@@ -44,9 +46,8 @@ namespace Backend_WebLaptop.Respository
             entity.CreateAt = curent.CreateAt;
             entity.Code = entity.Code!=null?entity.Code.ToUpper().Replace(" ",String.Empty):curent.Code;
             entity.MinApply = (entity.MinApply != null ? entity.MinApply : curent.MinApply);
-            entity.Value ??= curent.Value;
-            entity.IsValue = entity.IsValue == null ? curent.IsValue : entity.IsValue;
-            entity.MaxReduce = entity.MaxReduce == null ? curent.MaxReduce : entity.MaxReduce;
+            entity.Value = entity.Value >= 0 ? entity.Value : curent.Value;
+            entity.MaxReduce = entity.MaxReduce <= 0 ? curent.MaxReduce : entity.MaxReduce;
             entity.Quantity = entity.Quantity == null ? curent.Quantity : entity.Quantity;
             entity.StartAt = entity.StartAt == null ? curent.StartAt : entity.StartAt;
             entity.EndAt = entity.EndAt == null ? curent.EndAt : entity.EndAt;
@@ -67,8 +68,7 @@ namespace Backend_WebLaptop.Respository
             {
                 Items = all,
                 PageIndex = pageindex,
-                PageSize = PageSize,
-                TotalCount = (all != null ? all.Count : 0)
+                PageSize = PageSize
             };
         }
 
@@ -88,8 +88,8 @@ namespace Backend_WebLaptop.Respository
             {
                 string.IsNullOrWhiteSpace(entity.Code),
                 entity.MinApply==null||entity.MinApply<0,
-                entity.Value==null||entity.Value<=0,
-                entity.MaxReduce==null|| entity.MaxReduce<=0,
+                entity.Value<=0,
+                 entity.MaxReduce<=0,
                 entity.Quantity==null||entity.Quantity<=0,
                 entity.StartAt==null,
                 entity.EndAt==null,
@@ -101,6 +101,14 @@ namespace Backend_WebLaptop.Respository
                     return false;
             }
             return true;
+        }
+
+
+
+        public async Task<bool> IsValidCode(string Code)
+        {
+            var rs = await Vouchers.FindSync(e => e.Code == Code&&e.IsDisable==false).FirstOrDefaultAsync();
+            return rs != null;
         }
     }
 }

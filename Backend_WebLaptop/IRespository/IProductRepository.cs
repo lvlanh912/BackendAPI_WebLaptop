@@ -10,5 +10,7 @@ namespace Backend_WebLaptop.IRespository
         Task<bool> Insert(ImageUpload<Product> entity);
         Task<bool> Update(Product entity);
         Task<bool> Exits(string id);
+        Task<bool> DecreaseQuantity(List<OrderItem> items);
+        Task<bool> Cansell(List<OrderItem> items);
     }
 }

@@ -108,5 +108,22 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest();
             }
         }
+        [HttpPost("giam-sp")]
+        public async Task<ActionResult> Descrease(List<OrderItem> entity)
+        {
+            try
+            {
+                var rs =await _I.DecreaseQuantity(entity);
+                return StatusCode(200, new ResponseAPI<string>
+                {
+                    Message = rs ? "Success" : "Failed"
+                }.Format());
+            }
+            catch(Exception ex)
+            {
+                // Console.WriteLine(e.Message);
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

@@ -25,8 +25,9 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUploadImageRepository, UploadImageRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
-builder.Services.AddScoped<IStatusOrderingRepository, StatusOrderingRepository>();
+//builder.Services.AddScoped<IStatusOrderingRepository, StatusOrderingRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 
 

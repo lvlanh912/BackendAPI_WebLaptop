@@ -1,4 +1,4 @@
-﻿using Backend_WebLaptop.IRespository;
+﻿/*using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
 using Microsoft.AspNetCore.Mvc;
 
@@ -79,3 +79,4 @@ namespace Backend_WebLaptop.Controllers
         }
     }
 }
+*/
