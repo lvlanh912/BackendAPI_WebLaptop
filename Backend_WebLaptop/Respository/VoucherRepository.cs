@@ -56,16 +56,29 @@ namespace Backend_WebLaptop.Respository
             return entity;
         }
 
-        public async Task<PagingResult<Voucher>> GetAllVouchers(string? keywords, int PageSize, int pageindex, bool isdisable)
+        public async Task<PagingResult<Voucher>> GetAllVouchers(string? keywords, DateTime? createTimeStart, DateTime? createTimeEnd, bool? isdisable, int PageSize, int pageindex,string sort)
         {
             //filter
-            var all = string.IsNullOrWhiteSpace(keywords) ? await Vouchers.FindSync(e => true).ToListAsync() :
+            var result = string.IsNullOrWhiteSpace(keywords) ? await Vouchers.FindSync(e => true).ToListAsync() :
                 await Vouchers.FindSync(e => e.Code!.Contains(keywords.Trim().ToUpper())).ToListAsync();
-            if (isdisable)
-                all = all.FindAll(e => e.IsDisable == true);
+            if (isdisable!=null)
+                result = result.FindAll(e => e.IsDisable == isdisable);
+            if (createTimeStart != null)
+                result = result.FindAll(e => e.CreateAt >= createTimeStart);
+            if(createTimeEnd != null)
+                result=result.FindAll(e=>e.CreateAt<=createTimeEnd);
+            //sort
+            result = sort switch
+            {
+                "startdate_desc" => result.OrderByDescending(e => e.StartAt).ToList(),
+                "startdate" =>  result.OrderBy(e => e.StartAt).ToList(),
+                "enddate_desc" => result.OrderBy(e => e.EndAt).ToList(),
+                "enddate" =>  result.OrderByDescending(e => e.EndAt).ToList(),
+                _ => result.OrderBy(e => e.CreateAt).ToList(),
+            };
             return new PagingResult<Voucher>
             {
-                Items = all,
+                Items = result,
                 PageIndex = pageindex,
                 PageSize = PageSize
             };

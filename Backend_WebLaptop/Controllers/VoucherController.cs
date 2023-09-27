@@ -14,14 +14,14 @@ namespace Backend_WebLaptop.Controllers
             _I = i;
         }
         [HttpGet]
-        public async Task<ActionResult> Getall(string? keywords, int pageindex = 1, int pagesize = 10, bool disable = false)
+        public async Task<ActionResult> Getall(string? keywords,DateTime? createTimeStart, DateTime? createTimeEnd, bool? disable, string? sort, int pageindex = 1, int pagesize = 10)
         {
             try
             {
                 return StatusCode(200, new ResponseAPI<PagingResult<Voucher>>
                 {
                     Message = "Success",
-                    Result = await _I.GetAllVouchers(keywords, pagesize, pageindex, disable)
+                    Result = await _I.GetAllVouchers(keywords, createTimeStart, createTimeEnd, disable, pagesize, pageindex,sort??"create" )
                 });
             }
             catch (Exception ex)
@@ -99,7 +99,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost("disable")]
-        public async Task<ActionResult> disable(string voucherID)
+        public async Task<ActionResult> Disable(string voucherID)
         {
             try
             {
@@ -115,7 +115,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpDelete("{id}")]
-        public async Task<ActionResult> delete(string id)
+        public async Task<ActionResult> Delete(string id)
         {
             try
             {
