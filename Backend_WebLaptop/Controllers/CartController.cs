@@ -24,7 +24,7 @@ namespace Backend_WebLaptop.Controllers
             });
         }
         [HttpPost("add")]
-        public async Task<ActionResult> Insert_new(string accountid,CartItem item)
+        public async Task<ActionResult> Insert_new(string accountid, CartItem item)
         {
             try
             {
@@ -34,7 +34,7 @@ namespace Backend_WebLaptop.Controllers
             }
             catch
             {
-               // Console.WriteLine(e.Message);
+                // Console.WriteLine(e.Message);
                 return BadRequest();
             }
         }
@@ -64,7 +64,7 @@ namespace Backend_WebLaptop.Controllers
                     Message = IsSuccess ? "Success" : "Failed"
                 }.Format());
             }
-            catch 
+            catch
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();

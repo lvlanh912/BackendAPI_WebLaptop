@@ -14,19 +14,19 @@ namespace Backend_WebLaptop.Controllers
             _I = i;
         }
         [HttpGet]
-        public async Task<ActionResult> Getall(string? keywords,int pageindex=1,int pagesize=10,bool disable=false)
+        public async Task<ActionResult> Getall(string? keywords, int pageindex = 1, int pagesize = 10, bool disable = false)
         {
             try
             {
                 return StatusCode(200, new ResponseAPI<PagingResult<Voucher>>
                 {
                     Message = "Success",
-                    Result = await _I.GetAllVouchers(keywords,pagesize, pageindex, disable)
+                    Result = await _I.GetAllVouchers(keywords, pagesize, pageindex, disable)
                 });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.Message);
                 return BadRequest();
             }
         }
@@ -40,7 +40,7 @@ namespace Backend_WebLaptop.Controllers
                 {
                     Message = "Success",
                     Result = await _I.GetVoucherbyId(id)
-                }) ;
+                });
             }
             catch
             {
@@ -77,7 +77,7 @@ namespace Backend_WebLaptop.Controllers
                     Result = await _I.CreateVoucher(entity)
                 });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -93,7 +93,7 @@ namespace Backend_WebLaptop.Controllers
                     Result = await _I.EditVoucher(entity, id)
                 });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -106,7 +106,7 @@ namespace Backend_WebLaptop.Controllers
                 return StatusCode(200, new ResponseAPI<string>
                 {
                     Message = await _I.DisableVoucher(voucherID) ? "sucess" : "failed"
-                }) ;
+                });
             }
             catch
             {

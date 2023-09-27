@@ -1,7 +1,6 @@
 ﻿using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Backend_WebLaptop.Respository
@@ -28,13 +27,13 @@ namespace Backend_WebLaptop.Respository
         public async Task<bool> DisableVoucher(string voucherId)
         {
             var update = Builders<Voucher>.Update.Set(e => e.IsDisable, true);
-            var rs= await Vouchers.UpdateOneAsync(e => e.Id == voucherId, update);
+            var rs = await Vouchers.UpdateOneAsync(e => e.Id == voucherId, update);
             return rs.ModifiedCount > 0;
         }
         public async Task<bool> DeleteVoucher(string voucherId)
         {
             var rs = await Vouchers.FindOneAndDeleteAsync(e => e.Id == voucherId);
-            return rs!=null;
+            return rs != null;
         }
 
         public async Task<Voucher> EditVoucher(Voucher entity, string voucherId)
@@ -44,7 +43,7 @@ namespace Backend_WebLaptop.Respository
                 throw new Exception("This voucher does not exits");
             entity.Id = voucherId;
             entity.CreateAt = curent.CreateAt;
-            entity.Code = entity.Code!=null?entity.Code.ToUpper().Replace(" ",String.Empty):curent.Code;
+            entity.Code = entity.Code != null ? entity.Code.ToUpper().Replace(" ", String.Empty) : curent.Code;
             entity.MinApply = (entity.MinApply != null ? entity.MinApply : curent.MinApply);
             entity.Value = entity.Value >= 0 ? entity.Value : curent.Value;
             entity.MaxReduce = entity.MaxReduce <= 0 ? curent.MaxReduce : entity.MaxReduce;
@@ -57,13 +56,13 @@ namespace Backend_WebLaptop.Respository
             return entity;
         }
 
-        public async Task<PagingResult<Voucher>> GetAllVouchers(string? keywords, int PageSize, int pageindex,bool isdisable)
+        public async Task<PagingResult<Voucher>> GetAllVouchers(string? keywords, int PageSize, int pageindex, bool isdisable)
         {
             //filter
-            var all =string.IsNullOrWhiteSpace(keywords)? await Vouchers.FindSync(e => true).ToListAsync():
+            var all = string.IsNullOrWhiteSpace(keywords) ? await Vouchers.FindSync(e => true).ToListAsync() :
                 await Vouchers.FindSync(e => e.Code!.Contains(keywords.Trim().ToUpper())).ToListAsync();
             if (isdisable)
-               all= all.FindAll(e => e.IsDisable ==true);
+                all = all.FindAll(e => e.IsDisable == true);
             return new PagingResult<Voucher>
             {
                 Items = all,
@@ -95,7 +94,7 @@ namespace Backend_WebLaptop.Respository
                 entity.EndAt==null,
                 entity.CreateAt==null,
             };
-            foreach(var item in list)
+            foreach (var item in list)
             {
                 if (item == true)
                     return false;
@@ -107,7 +106,7 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<bool> IsValidCode(string Code)
         {
-            var rs = await Vouchers.FindSync(e => e.Code == Code&&e.IsDisable==false).FirstOrDefaultAsync();
+            var rs = await Vouchers.FindSync(e => e.Code == Code && e.IsDisable == false).FirstOrDefaultAsync();
             return rs != null;
         }
     }

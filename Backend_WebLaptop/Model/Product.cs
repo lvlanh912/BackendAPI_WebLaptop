@@ -11,7 +11,7 @@ namespace Backend_WebLaptop.Model
         [BsonElement("Name_Product")]
         public string? ProductName { get; set; }
         [BsonElement("Max_Price")]
-        public Int32? MaxPrice { get; set; }  
+        public Int32? MaxPrice { get; set; }
 
         public Int32 Price { get; set; }
 
@@ -21,11 +21,11 @@ namespace Backend_WebLaptop.Model
 
         public Int32 Stock { get; set; }
 
-        public Int32 Sold { get; set; }=0;
+        public Int32 Sold { get; set; } = 0;
 
         public Int64 View { get; set; } = 1;
 
-        [BsonElement("Brand_name")]    
+        [BsonElement("Brand_name")]
         public string? BrandName { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]

@@ -15,22 +15,23 @@ namespace Backend_WebLaptop.Controllers
             _I = i;
         }
         [HttpGet]
-        public async Task<ActionResult> Get_Products(int? pageindex, int? size,string? keywords,string? Brand,
-            string? Category,int? min,int? max)
+        public async Task<ActionResult> Get_Products(int? pageindex, int? size, string? keywords, string? Brand,
+            string? Category, int? min, int? max)
         {
             try
             {
                 return StatusCode(200, new ResponseAPI<PagingResult<Product>>
                 {
-                    Message = "Success", 
-                    Result = await _I.GetAll(new ProductFilter { 
-                        Brand=Brand,
-                        Keywords=keywords,
-                        Category=Category,
-                        Min_price=min,
-                        Max_price=max
-                    }, pageindex??1, size??10)
-                }); 
+                    Message = "Success",
+                    Result = await _I.GetAll(new ProductFilter
+                    {
+                        Brand = Brand,
+                        Keywords = keywords,
+                        Category = Category,
+                        Min_price = min,
+                        Max_price = max
+                    }, pageindex ?? 1, size ?? 10)
+                });
             }
             catch
             {
@@ -54,7 +55,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost]
-        public async Task<ActionResult> Insert_new([FromForm] string data,List<IFormFile>? images)
+        public async Task<ActionResult> Insert_new([FromForm] string data, List<IFormFile>? images)
         {
             try
             {
@@ -68,24 +69,24 @@ namespace Backend_WebLaptop.Controllers
                     })
                 });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(string id,Product entity)
+        public async Task<ActionResult> Update(string id, Product entity)
         {
             try
             {
                 entity.Id = id;
-               var IsSuccess= await _I.Update(entity);
+                var IsSuccess = await _I.Update(entity);
                 return StatusCode(200, new ResponseAPI<string>
                 {
                     Message = IsSuccess ? "Success" : "Failed"
-                }.Format()) ;
+                }.Format());
             }
-            catch 
+            catch
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();
@@ -102,7 +103,7 @@ namespace Backend_WebLaptop.Controllers
                     Message = IsSuccess ? "Success" : "Failed"
                 }.Format());
             }
-            catch 
+            catch
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();
@@ -113,13 +114,13 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                var rs =await _I.DecreaseQuantity(entity);
+                var rs = await _I.DecreaseQuantity(entity);
                 return StatusCode(200, new ResponseAPI<string>
                 {
                     Message = rs ? "Success" : "Failed"
                 }.Format());
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest(ex.Message);

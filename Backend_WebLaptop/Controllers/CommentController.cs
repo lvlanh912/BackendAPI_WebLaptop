@@ -1,6 +1,5 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
@@ -15,16 +14,16 @@ namespace Backend_WebLaptop.Controllers
             _I = i;
         }
         [HttpGet]
-        public async Task<ActionResult> Get_Commnets_byProductId(int pageindex,int size)
+        public async Task<ActionResult> Get_Commnets_byProductId(int pageindex, int size)
         {
             try
             {
-               string ProductId = this.RouteData.Values["ProductId"]!.ToString()!;
+                string ProductId = this.RouteData.Values["ProductId"]!.ToString()!;
                 return StatusCode(200, new ResponseAPI<PagingResult<Comment>>
-            {
-                Message = "Success",
-                Result = await _I.GetAll(pageindex, ProductId, size)
-            }) ;
+                {
+                    Message = "Success",
+                    Result = await _I.GetAll(pageindex, ProductId, size)
+                });
             }
             catch
             {
@@ -32,7 +31,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost]
-        public async Task<ActionResult> Insert_new( Comment entity)
+        public async Task<ActionResult> Insert_new(Comment entity)
         {
             try
             {
@@ -46,23 +45,23 @@ namespace Backend_WebLaptop.Controllers
             }
             catch
             {
-               // Console.WriteLine(e.Message);
+                // Console.WriteLine(e.Message);
                 return BadRequest();
             }
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(string id,Comment entity)
+        public async Task<ActionResult> Update(string id, Comment entity)
         {
             try
             {
                 entity.Id = id;
-               var IsSuccess= await _I.Update(entity);
+                var IsSuccess = await _I.Update(entity);
                 return StatusCode(200, new ResponseAPI<string>
                 {
                     Message = IsSuccess ? "Success" : "Failed"
-                }.Format()) ;
+                }.Format());
             }
-            catch 
+            catch
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();
@@ -79,7 +78,7 @@ namespace Backend_WebLaptop.Controllers
                     Message = IsSuccess ? "Success" : "Failed"
                 }.Format());
             }
-            catch 
+            catch
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();

@@ -2,7 +2,6 @@
 using Backend_WebLaptop.Model;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.Linq;
 
 namespace Backend_WebLaptop.Controllers
 {
@@ -18,15 +17,15 @@ namespace Backend_WebLaptop.Controllers
             _Cart = cart;
         }
         [HttpGet]
-        public async Task<ActionResult> GETALL(string? keywords, int pageIndex, int pageSize)
+        public async Task<ActionResult> GETALL(string? keywords,string? type, DateTime? startdate, DateTime? enddate, int? role, bool? gender, string? sort, int pageIndex = 1, int pageSize = 5)
         {
             try
             {
                 return StatusCode(200, new ResponseAPI<PagingResult<Account>>
                 {
-                    Result = await _I.GetAll(keywords, pageIndex, pageSize),
+                    Result = await _I.GetAll(keywords,type, startdate, enddate, role, gender, pageIndex, pageSize, sort ?? "date"),
                     Message = "Success"
-                }.Format());
+                });
             }
             catch
             {
@@ -42,8 +41,8 @@ namespace Backend_WebLaptop.Controllers
                 return StatusCode(200, new ResponseAPI<Account>
                 {
                     Result = rs,
-                    Message = rs != null? "Success":"Invalid user"
-                }.Format()) ;
+                    Message = rs != null ? "Success" : "Invalid user"
+                });
             }
             catch
             {
@@ -51,14 +50,14 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost]
-        public async Task<ActionResult> ADD([FromForm] string data,List<IFormFile>? images)
+        public async Task<ActionResult> ADD([FromForm] string data, List<IFormFile>? images)
         {
             try
             {
-              var a=  await _I.Insert(new ImageUpload<Account>
+                var a = await _I.Insert(new ImageUpload<Account>
                 {
-                    data= JsonConvert.DeserializeObject<Account>(data),
-                    images= images
+                    data = JsonConvert.DeserializeObject<Account>(data),
+                    images = images
                 });
                 await _Cart.Create(a.Id!);
                 return StatusCode(201, new ResponseAPI<string> { Message = "Create Success" }.Format());
@@ -74,12 +73,12 @@ namespace Backend_WebLaptop.Controllers
             try
             {
                 var account = JsonConvert.DeserializeObject<Account>(data);
-                account!.Id= this.HttpContext.GetRouteValue("id")!.ToString();
+                account!.Id = this.HttpContext.GetRouteValue("id")!.ToString();
                 await _I.Update(new ImageUpload<Account>
                 {
-                    data= account,
-                    images=images
-            });
+                    data = account,
+                    images = images
+                });
                 return StatusCode(200, new ResponseAPI<string> { Message = "Update Successfull" }.Format());
             }
             catch
@@ -92,15 +91,15 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                string result = await _I.DeletebyId(id)==true?"deleted":"This item is does not exits";
-                return StatusCode(200, new ResponseAPI<string> { Message=result}.Format());
+                string result = await _I.DeletebyId(id) == true ? "deleted" : "This item is does not exits";
+                return StatusCode(200, new ResponseAPI<string> { Message = result }.Format());
             }
             catch
             {
                 return NotFound();
             }
         }
-       
+
     }
 }
 

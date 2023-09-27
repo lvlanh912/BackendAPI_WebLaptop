@@ -10,11 +10,11 @@ namespace Backend_WebLaptop.Respository
         private readonly IMongoCollection<Comment> _Comments;
         private readonly IAccountRepository _Accounts;
         private readonly IProductRepository _Products;
-        public CommentRepository(IDatabase_Service database_Service, IAccountRepository Accounts,IProductRepository Products)
+        public CommentRepository(IDatabase_Service database_Service, IAccountRepository Accounts, IProductRepository Products)
         {
-            _Comments=database_Service.Get_Comments_Collection();
+            _Comments = database_Service.Get_Comments_Collection();
             _Accounts = Accounts;
-            _Products=Products;
+            _Products = Products;
         }
         public async Task<bool> DeletebyId(string id)
         {
@@ -25,21 +25,22 @@ namespace Backend_WebLaptop.Respository
         public async Task<PagingResult<Comment>> GetAll(int pageindex, string ProductId, int size)
         {
 
-            var comments =await _Comments.FindAsync(e => e.ProductId == ProductId);
-            var result = new PagingResult<Comment>{ 
-                PageIndex=pageindex,
-                PageSize=size,
-                Items= comments.ToEnumerable<Comment>().OrderBy(e => e.CreateAt).Skip((pageindex - 1) * size).Take(size)
+            var comments = await _Comments.FindAsync(e => e.ProductId == ProductId);
+            var result = new PagingResult<Comment>
+            {
+                PageIndex = pageindex,
+                PageSize = size,
+                Items = comments.ToEnumerable<Comment>().OrderBy(e => e.CreateAt).Skip((pageindex - 1) * size).Take(size)
             };
             return result;
         }
-        public async Task<Comment> GetbyId(string id)=> await _Comments.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+        public async Task<Comment> GetbyId(string id) => await _Comments.FindSync(e => e.Id == id).FirstOrDefaultAsync();
 
         public async Task<bool> Insert(Comment entity)
         {
-            if( await ValidateData(entity))
+            if (await ValidateData(entity))
             {
-                entity.CreateAt=DateTime.Now;
+                entity.CreateAt = DateTime.Now;
                 await _Comments.InsertOneAsync(entity);
                 return true;
             }
@@ -50,7 +51,7 @@ namespace Backend_WebLaptop.Respository
             if (await ValidateData(entity))
             {
                 entity.CreateAt = DateTime.Now;
-                await _Comments.FindOneAndReplaceAsync(e=>e.Id==entity.Id,entity);
+                await _Comments.FindOneAndReplaceAsync(e => e.Id == entity.Id, entity);
                 return true;
             }
             return false;
@@ -63,7 +64,7 @@ namespace Backend_WebLaptop.Respository
                entity.Star>1&&entity.Star<=5,
                entity.ProductId!=null&& await _Products.Exits(entity.ProductId),
             };
-            foreach(var item in result)
+            foreach (var item in result)
                 if (item == false)
                     return item;
             return true;

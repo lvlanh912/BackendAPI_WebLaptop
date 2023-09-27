@@ -10,7 +10,7 @@ namespace Backend_WebLaptop.Model
         public string? Id { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
         public string? AccountID { get; set; }
-        public List<CartItem> Items { get; set; }=new List<CartItem>();
+        public List<CartItem> Items { get; set; } = new List<CartItem>();
     }
     public class CartItem
     {

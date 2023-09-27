@@ -20,38 +20,38 @@ namespace Backend_WebLaptop.Controllers
             {
                 Message = "Success",
                 Result = await _I.GetAll()
-            }) ;
+            });
         }
         [HttpPost]
-        public async Task<ActionResult> Insert_new( Category entity)
+        public async Task<ActionResult> Insert_new(Category entity)
         {
             try
             {
-            return StatusCode(201, new ResponseAPI<Category>
-            {
-                Message = "Created",
-                Result = await _I.Insert(entity)
-            });
+                return StatusCode(201, new ResponseAPI<Category>
+                {
+                    Message = "Created",
+                    Result = await _I.Insert(entity)
+                });
             }
             catch
             {
-               // Console.WriteLine(e.Message);
+                // Console.WriteLine(e.Message);
                 return BadRequest();
             }
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(string id,Category entity)
+        public async Task<ActionResult> Update(string id, Category entity)
         {
             try
             {
                 entity.Id = id;
-               var IsSuccess= await _I.Update(entity);
+                var IsSuccess = await _I.Update(entity);
                 return StatusCode(200, new ResponseAPI<string>
                 {
                     Message = IsSuccess ? "Success" : "Failed"
-                }.Format()) ;
+                }.Format());
             }
-            catch 
+            catch
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();
@@ -68,7 +68,7 @@ namespace Backend_WebLaptop.Controllers
                     Message = IsSuccess ? "Success" : "Failed"
                 }.Format());
             }
-            catch 
+            catch
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();

@@ -11,8 +11,8 @@ namespace Backend_WebLaptop.IRespository
         //làm trống giỏ hàng
         Task<bool> EmptyCart(string userID);
         //thêm sản phẩm vào giỏ
-        Task<bool> AddtoCart(CartItem cartItem,string userId);
+        Task<bool> AddtoCart(CartItem cartItem, string userId);
         //xoá sản phẩm vào giỏ hàng
-        Task<bool> DeleteItem(CartItem cartItem,string userId);
+        Task<bool> DeleteItem(CartItem cartItem, string userId);
     }
 }

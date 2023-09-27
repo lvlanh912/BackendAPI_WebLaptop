@@ -1,6 +1,5 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
@@ -23,7 +22,7 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _I.GetAllProvince()
             });
         }
-        [HttpGet("districts{ProvinceCode}")]
+        [HttpGet("districts")]
         public async Task<ActionResult> GetList_District(int ProvinceCode)
         {
             return StatusCode(200, new ResponseAPI<List<District>>
@@ -32,7 +31,7 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _I.GetListDistrict(ProvinceCode)
             });
         }
-        [HttpGet("wards{DistrictCode}")]
+        [HttpGet("wards")]
         public async Task<ActionResult> GetList_Ward(int DistrictCode)
         {
             return StatusCode(200, new ResponseAPI<List<Ward>>
@@ -47,7 +46,7 @@ namespace Backend_WebLaptop.Controllers
             return StatusCode(200, new ResponseAPI<Ward>
             {
                 Message = "Success",
-                Result =await _I.GetWardbyId(id)
+                Result = await _I.GetWardbyId(id)
             });
         }
     }

@@ -1,7 +1,6 @@
 ﻿using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Backend_WebLaptop.Respository
@@ -10,37 +9,37 @@ namespace Backend_WebLaptop.Respository
     {
         private readonly IMongoCollection<Category>? Categories;
 
-        public CategoryRepository(IDatabase_Service database_Service) 
+        public CategoryRepository(IDatabase_Service database_Service)
         {
             Categories = database_Service.Get_Categories_Collection();
         }
 
         public async Task<bool> DeletebyId(string id)
         {
-           var rs= await Categories.DeleteOneAsync(e => e.Id == id);
-            return rs.DeletedCount!=0;
+            var rs = await Categories.DeleteOneAsync(e => e.Id == id);
+            return rs.DeletedCount != 0;
         }
 
         public async Task<bool> Exits(List<string> List_id)
         {
             //nếu 1 catogery trong danh sách không tồn tại=>false
-           foreach (var id in List_id)
+            foreach (var id in List_id)
             {
-                var rs =await  Categories.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+                var rs = await Categories.FindSync(e => e.Id == id).FirstOrDefaultAsync();
                 if (rs == null)
                     return false;
             }
             return true;
         }
 
-        public async Task<List<Category>> GetAll() => await Categories.FindSync(e=>true).ToListAsync();
+        public async Task<List<Category>> GetAll() => await Categories.FindSync(e => true).ToListAsync();
 
-        public  async Task<Category> GetbyId(string id)=> await Categories.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+        public async Task<Category> GetbyId(string id) => await Categories.FindSync(e => e.Id == id).FirstOrDefaultAsync();
 
         public async Task<Category> Insert(Category e)
         {
-            if( await ValidateData(e))
-            await Categories!.InsertOneAsync(e);
+            if (await ValidateData(e))
+                await Categories!.InsertOneAsync(e);
             return e;
         }
 
@@ -53,8 +52,8 @@ namespace Backend_WebLaptop.Respository
             }
             entity.Name ??= curent.Name;
             entity.Description ??= curent.Description;
-           var rs= await Categories.FindOneAndReplaceAsync(x => x.Id == entity.Id, entity);
-            return rs!=null;
+            var rs = await Categories.FindOneAndReplaceAsync(x => x.Id == entity.Id, entity);
+            return rs != null;
         }
 
         private static Task<bool> ValidateData(Category entity)

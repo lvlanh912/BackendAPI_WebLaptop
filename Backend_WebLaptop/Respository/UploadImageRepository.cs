@@ -23,7 +23,7 @@ namespace Backend_WebLaptop.Respository
             }
             var t = list_name;
             return t;
-  
+
         }
 
         public async Task<string> UploadProfile_Image(ImageUpload<Account> entity)//one image
@@ -36,14 +36,14 @@ namespace Backend_WebLaptop.Respository
             return await Upload_image(entity.images[0], entity.data!.Id!, path);
         }
 
-        public async Task<string> Upload_image(IFormFile image, string filename,string path)
+        public async Task<string> Upload_image(IFormFile image, string filename, string path)
         {
-           string  fullfilename = filename + Path.GetExtension(image.FileName);
+            string fullfilename = filename + Path.GetExtension(image.FileName);
             path = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\images\\{path}", fullfilename);
             //lưu file
             using (var stream = new FileStream(path, FileMode.Create))
             {
-                    await Task.Run( async () =>await image.CopyToAsync(stream));
+                await Task.Run(async () => await image.CopyToAsync(stream));
             }
             return fullfilename;
         }

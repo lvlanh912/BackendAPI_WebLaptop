@@ -1,6 +1,5 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
@@ -21,40 +20,40 @@ namespace Backend_WebLaptop.Controllers
             {
                 Message = "Success",
                 Result = await _I.GetAll(userID)
-            }) ;
+            });
         }
         [HttpPost("{userID}/shipping-address")]
-        public async Task<ActionResult> Insert_new( ShippingAddress shippingAddress)
+        public async Task<ActionResult> Insert_new(ShippingAddress shippingAddress)
         {
             try
             {
                 shippingAddress.AccountId = this.RouteData.Values["userID"]!.ToString();
-            return StatusCode(201, new ResponseAPI<ShippingAddress>
-            {
-                Message = "Created",
-                Result = await _I.Insert(shippingAddress)
-            });
+                return StatusCode(201, new ResponseAPI<ShippingAddress>
+                {
+                    Message = "Created",
+                    Result = await _I.Insert(shippingAddress)
+                });
             }
             catch
             {
-               // Console.WriteLine(e.Message);
+                // Console.WriteLine(e.Message);
                 return BadRequest();
             }
         }
         [HttpPut("{userID}/shipping-address/{id}")]
-        public async Task<ActionResult> Update(string id,ShippingAddress shippingAddress)
+        public async Task<ActionResult> Update(string id, ShippingAddress shippingAddress)
         {
             try
             {
                 shippingAddress.AccountId = this.RouteData.Values["userID"]!.ToString();
                 shippingAddress.Id = id;
-               var IsSuccess= await _I.Update(shippingAddress);
+                var IsSuccess = await _I.Update(shippingAddress);
                 return StatusCode(200, new ResponseAPI<ShippingAddress>
                 {
                     Message = IsSuccess ? "Success" : "Failed"
-                }.Format()) ;
+                }.Format());
             }
-            catch 
+            catch
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();
@@ -71,7 +70,7 @@ namespace Backend_WebLaptop.Controllers
                     Message = IsSuccess ? "Success" : "Failed"
                 }.Format());
             }
-            catch 
+            catch
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();

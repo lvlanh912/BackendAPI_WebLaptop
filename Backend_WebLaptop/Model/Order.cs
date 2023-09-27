@@ -21,12 +21,6 @@ namespace Backend_WebLaptop.Model
         public int? Paid { get; set; }
         public string? VoucherCode { get; set; }
     }
-/*    public class OrderStatus
-    {
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? StatusID { get; set; }
-        public DateTime? UpdateAt { get; set; }
-    }*/
     public class OrderItem
     {
         [BsonRepresentation(BsonType.ObjectId)]

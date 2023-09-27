@@ -8,11 +8,11 @@ namespace Backend_WebLaptop.Model
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
-        public string? Username { get; set; } 
+        public string? Username { get; set; }
 
-        public string? Password { get; set; }=null!;
+        public string? Password { get; set; } = null!;
 
-        public string? Roles { get; set; } = null!;
+        public Int32? Roles { get; set; } = 1!;
 
         public string? Fullname { get; set; } = null!;
 
@@ -27,8 +27,8 @@ namespace Backend_WebLaptop.Model
 
         public string? Profile_image { get; set; } = null!;
 
-        public DateTime? CreateAt { get; set; }=DateTime.Now;
+        public DateTime CreateAt { get; set; } = DateTime.Now;
 
-        public Boolean? Sex { get; set; } = null;
+        public Boolean? Sex { get; set; } = true;
     }
 }
