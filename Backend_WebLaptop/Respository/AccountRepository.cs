@@ -108,6 +108,7 @@ namespace Backend_WebLaptop.Respository
             }
             entity.data.Username = curent.Username;//cannot update username
             entity.data.Password ??= curent.Password;
+            entity.data.Fullname ??= curent.Fullname;
             entity.data.Email ??= curent.Email;
             entity.data.Address ??= curent.Address;
             entity.data.Roles ??= curent.Roles;
@@ -115,7 +116,7 @@ namespace Backend_WebLaptop.Respository
             entity.data.WardID ??= curent.WardID;
             entity.data.Sex ??= curent.Sex;
             entity.data.Phone ??= curent.Phone;
-            if (entity.images != null)
+            if (entity.images!.Count != 0)
             {
                 entity.data.Profile_image = await _Upload.UploadProfile_Image(entity);
             }
