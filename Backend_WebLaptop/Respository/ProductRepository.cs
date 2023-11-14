@@ -8,14 +8,14 @@ namespace Backend_WebLaptop.Respository
 {
     public class ProductRepository : IProductRepository
     {
-        private readonly IMongoCollection<Product> _Products;
-        private readonly ICategoryRepository _Category;
-        private readonly IUploadImageRepository _Upload;
-        public ProductRepository(IDatabase_Service dataBase_Service, ICategoryRepository category, IUploadImageRepository upload)
+        private readonly IMongoCollection<Product> _products;
+        private readonly ICategoryRepository _category;
+        private readonly IUploadImageRepository _upload;
+        public ProductRepository(IDatabaseService dataBaseService, ICategoryRepository category, IUploadImageRepository upload)
         {
-            _Products = dataBase_Service.Get_Products_Collection();
-            _Category = category;
-            _Upload = upload;
+            _products = dataBaseService.Get_Products_Collection();
+            _category = category;
+            _upload = upload;
         }
 
 
@@ -30,7 +30,7 @@ namespace Backend_WebLaptop.Respository
             foreach (var item in items)
             {
                 var update = Builders<Product>.Update.Inc(e => e.Sold, item.Quantity).Inc(e => e.Stock, -item.Quantity);
-                task.Add(_Products.FindOneAndUpdateAsync(e => e.Id == item.ProductID, update));
+                task.Add(_products.FindOneAndUpdateAsync(e => e.Id == item.ProductId, update));
             }
             await Task.WhenAll(task);
             return true;
@@ -38,13 +38,13 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<bool> DeletebyId(string id)
         {
-            var rs = await _Products.DeleteOneAsync(e => e.Id == id);
+            var rs = await _products.DeleteOneAsync(e => e.Id == id);
             return rs.DeletedCount > 0;
         }
 
         public async Task<bool> Exits(string id)
         {
-            var rs = await _Products.FindAsync(e => e.Id == id);
+            var rs = await _products.FindAsync(e => e.Id == id);
             return rs != null;
         }
 
@@ -57,20 +57,20 @@ namespace Backend_WebLaptop.Respository
                 PageSize = pagesize
             };
         }
-        public async Task<Product> GetbyId(string id) => await _Products.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+        public async Task<Product> GetbyId(string id) => await _products.FindSync(e => e.Id == id).FirstOrDefaultAsync();
 
         public async Task<bool> Insert(ImageUpload<Product> entity)
         {
-            entity.data!.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
-            if (entity.images == null)
+            entity.Data!.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
+            if (entity.Images == null)
                 throw new Exception("please add image");
-            entity.data.Images = await _Upload.UploadProduct_Image(entity);
-            entity.data.CreateAt = DateTime.Now;
-            entity.data.Sold = 0;//đã bán = 0
-            entity.data.View = 0;//lượt xem = 0
-            if (await ValidateData(entity.data))
+            entity.Data.Images = await _upload.UploadProduct_Image(entity);
+            entity.Data.CreateAt = DateTime.Now;
+            entity.Data.Sold = 0;//đã bán = 0
+            entity.Data.View = 0;//lượt xem = 0
+            if (await ValidateData(entity.Data))
             {
-                await _Products.InsertOneAsync(entity.data);
+                await _products.InsertOneAsync(entity.Data);
                 return true;
             }
             return false;
@@ -78,20 +78,20 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<bool> Update(Product entity)
         {
-            var curent = await _Products.FindSync(e => entity.Id == entity.Id).FirstOrDefaultAsync();
+            var curent = await _products.FindSync(e => entity.Id == entity.Id).FirstOrDefaultAsync();
             entity.CreateAt = curent.CreateAt;
             entity.Sold = (entity.Sold >= 0 ? curent.Sold : entity.Sold);
             entity.Price = (entity.Price <= 1000 ? curent.Price : entity.Price);
             entity.MaxPrice = (entity.MaxPrice <= 1000 ? curent.MaxPrice : entity.MaxPrice);
             entity.View = (entity.View <= 0 ? curent.View : entity.View);
-            entity.CategoryID = (entity.CategoryID == null || entity.CategoryID.Count == 0) ? curent.CategoryID : entity.CategoryID;
+            entity.CategoryId = (entity.CategoryId == null || entity.CategoryId.Count == 0) ? curent.CategoryId : entity.CategoryId;
             entity.Stock = entity.Stock <= 0 ? curent.Stock : entity.Stock;
             entity.Weight = entity.Weight <= 0 ? curent.Weight : entity.Weight;
             entity.BrandName = String.IsNullOrWhiteSpace(entity.BrandName) ? curent.BrandName : entity.BrandName;
             entity.Special = (entity.Special == null || entity.Special.Count == 0) ? curent.Special : entity.Special;
             if (await ValidateData(entity))
             {
-                var rs = await _Products.ReplaceOneAsync(e => e.Id == entity.Id, entity);
+                var rs = await _products.ReplaceOneAsync(e => e.Id == entity.Id, entity);
                 return rs.ModifiedCount > 0;
             }
             return false;
@@ -102,33 +102,33 @@ namespace Backend_WebLaptop.Respository
             //nếu có từ khoá và 1 danh mục ->lọc sản phẩm có từ khoá trong danh mục đấy
             if (!string.IsNullOrEmpty(filter.Keywords) && !string.IsNullOrEmpty(filter.Category))
             {
-                var data = await _Products.FindAsync(e => e.CategoryID!.Contains(filter.Category) &&
+                var data = await _products.FindAsync(e => e.CategoryId!.Contains(filter.Category) &&
                 e.ProductName!.Trim().ToLower().Contains(filter.Keywords));
                 rs = data.ToEnumerable<Product>();
             }
             //nếu chỉ có danh mục ->sản phẩm có trong danh mục đó
             if (string.IsNullOrEmpty(filter.Keywords) && !string.IsNullOrEmpty(filter.Category))
             {
-                var data = await _Products.FindAsync(e => e.CategoryID!.Contains(filter.Category));
+                var data = await _products.FindAsync(e => e.CategoryId!.Contains(filter.Category));
                 rs = data.ToEnumerable<Product>();
             }
             //nếu có danh mục và hãng-> lọc Sản phẩm theo hãng trong danh mục đó
             if (!string.IsNullOrEmpty(filter.Brand) && !string.IsNullOrEmpty(filter.Category))
             {
-                var data = await _Products.FindAsync(e => e.CategoryID!.Contains(filter.Category) &&
+                var data = await _products.FindAsync(e => e.CategoryId!.Contains(filter.Category) &&
                 e.BrandName!.Trim().ToLower() == filter.Brand.Trim().ToLower());
                 rs = data.ToEnumerable<Product>();
             }
             //nếu chỉ có hãng-> lọc tất cả sản phẩm theo hãng đó
             if (!string.IsNullOrEmpty(filter.Brand) && string.IsNullOrEmpty(filter.Category))
             {
-                var data = await _Products.FindAsync(e => e.BrandName!.Trim().ToLower() == filter.Brand.Trim().ToLower());
+                var data = await _products.FindAsync(e => e.BrandName!.Trim().ToLower() == filter.Brand.Trim().ToLower());
                 rs = data.ToEnumerable<Product>();
             }
-            if (filter.Min_price.HasValue)
-                rs = rs.Where(e => e.Price >= filter.Min_price);
-            if (filter.Max_price.HasValue)
-                rs = rs.Where(e => e.Price <= filter.Max_price);
+            if (filter.MinPrice.HasValue)
+                rs = rs.Where(e => e.Price >= filter.MinPrice);
+            if (filter.MaxPrice.HasValue)
+                rs = rs.Where(e => e.Price <= filter.MaxPrice);
             return rs;
         }
         private async Task<bool> ValidateData(Product entity)
@@ -138,7 +138,7 @@ namespace Backend_WebLaptop.Respository
                 entity.Price>1000,
                 entity.Stock>=0,
                 entity.Weight>0,
-                entity.CategoryID!.Count>0&&  await _Category.Exits(entity.CategoryID),
+                entity.CategoryId!.Count>0&&  await _category.Exits(entity.CategoryId),
                 entity.MaxPrice>1000,
                 entity.View>=0,
                 entity.Images!=null&&  entity.Images.Count>=1,
@@ -158,15 +158,15 @@ namespace Backend_WebLaptop.Respository
             foreach (var item in items)
             {
 
-                if (!await Cansell_Item(item.ProductID!, item.Quantity))
-                    throw new Exception($"{item.ProductID} không có đủ số lượng để bán");
+                if (!await Cansell_Item(item.ProductId!, item.Quantity))
+                    throw new Exception($"{item.ProductId} không có đủ số lượng để bán");
             }
             return true;
         }
         async Task<bool> Cansell_Item(string id, int quantity)
         {
-            var curent_product = await _Products.FindSync(e => e.Id == id).FirstOrDefaultAsync();
-            return curent_product.Stock - quantity >= 0;
+            var curentProduct = await _products.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+            return curentProduct.Stock - quantity >= 0;
         }
     }
 }

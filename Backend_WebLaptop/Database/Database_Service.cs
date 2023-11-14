@@ -6,7 +6,7 @@ using MongoDB.Driver;
 namespace Backend_WebLaptop.Database
 
 {
-    public class Database_Service : IDatabase_Service
+    public class DatabaseService : IDatabaseService
     {
         private readonly IMongoCollection<Account> _accounts;
         private readonly IMongoCollection<District> _districts;
@@ -20,22 +20,23 @@ namespace Backend_WebLaptop.Database
         private readonly IMongoCollection<Voucher> _vouchers;
         private readonly IMongoCollection<Order> _orders;
         private readonly IMongoCollection<Payment> _payments;
-        public Database_Service(IOptions<DatabaseConfig> _Databaseconfig)
+        public DatabaseService(IOptions<DatabaseConfig> databaseconfig)
         {
-            var mongoClient = new MongoClient(_Databaseconfig.Value.ConnectionString);
-            var mongoDatabase = mongoClient.GetDatabase(_Databaseconfig.Value.DatabaseName);
-            _accounts = mongoDatabase.GetCollection<Account>(_Databaseconfig.Value.Accounts_Collections);
-            _provinces = mongoDatabase.GetCollection<Province>(_Databaseconfig.Value.Provinces_Collections);
-            _districts = mongoDatabase.GetCollection<District>(_Databaseconfig.Value.Districts_Collections);
-            _wards = mongoDatabase.GetCollection<Ward>(_Databaseconfig.Value.Wards_Collections);
-            _shippingAddress = mongoDatabase.GetCollection<ShippingAddress>(_Databaseconfig.Value.Shipping_Address_Collections);
-            _products = mongoDatabase.GetCollection<Product>(_Databaseconfig.Value.Products_Collections);
-            _categories = mongoDatabase.GetCollection<Category>(_Databaseconfig.Value.Category_Collections);
-            _comments = mongoDatabase.GetCollection<Comment>(_Databaseconfig.Value.Comments_Collections);
-            _carts = mongoDatabase.GetCollection<Cart>(_Databaseconfig.Value.Carts_Collections);
-            _vouchers = mongoDatabase.GetCollection<Voucher>(_Databaseconfig.Value.Vouchers_Collections);
-            _orders = mongoDatabase.GetCollection<Order>(_Databaseconfig.Value.Orders_Collections);
-            _payments = mongoDatabase.GetCollection<Payment>(_Databaseconfig.Value.Payments_Collections);
+            var mongoClient = new MongoClient(databaseconfig.Value.ConnectionString);
+            var mongoDatabase = mongoClient.GetDatabase(databaseconfig.Value.DatabaseName);
+            var a = databaseconfig.Value.AccountsCollections;
+            _accounts = mongoDatabase.GetCollection<Account>(databaseconfig.Value.AccountsCollections);
+            _provinces = mongoDatabase.GetCollection<Province>(databaseconfig.Value.ProvincesCollections);
+            _districts = mongoDatabase.GetCollection<District>(databaseconfig.Value.DistrictsCollections);
+            _wards = mongoDatabase.GetCollection<Ward>(databaseconfig.Value.WardsCollections);
+            _shippingAddress = mongoDatabase.GetCollection<ShippingAddress>(databaseconfig.Value.ShippingAddressCollections);
+            _products = mongoDatabase.GetCollection<Product>(databaseconfig.Value.ProductsCollections);
+            _categories = mongoDatabase.GetCollection<Category>(databaseconfig.Value.CategoryCollections);
+            _comments = mongoDatabase.GetCollection<Comment>(databaseconfig.Value.CommentsCollections);
+            _carts = mongoDatabase.GetCollection<Cart>(databaseconfig.Value.CartsCollections);
+            _vouchers = mongoDatabase.GetCollection<Voucher>(databaseconfig.Value.VouchersCollections);
+            _orders = mongoDatabase.GetCollection<Order>(databaseconfig.Value.OrdersCollections);
+            _payments = mongoDatabase.GetCollection<Payment>(databaseconfig.Value.PaymentsCollections);
         }
 
         public IMongoCollection<Account> Get_Accounts_Collection() => _accounts;

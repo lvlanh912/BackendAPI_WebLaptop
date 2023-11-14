@@ -10,6 +10,9 @@ namespace Backend_WebLaptop.Model
         public string? Id { get; set; }
         [BsonElement("Name_Category")]
         public string? Name { get; set; }
-        public string? Description { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? ParentId { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public List<string> Childs { get; set; }= new List<string>();
     }
 }

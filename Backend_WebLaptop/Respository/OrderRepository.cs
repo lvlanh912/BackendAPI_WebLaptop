@@ -14,11 +14,11 @@ namespace Backend_WebLaptop.Respository
         private readonly IProductRepository _products;
         private readonly IShippingAddressRepository _shippingaddress;
 
-        public OrderRepository(IDatabase_Service database_Service, IPaymentRepository payments, IAccountRepository accounts
+        public OrderRepository(IDatabaseService databaseService, IPaymentRepository payments, IAccountRepository accounts
             , IVoucherRepository voucher, IProductRepository products, IShippingAddressRepository shippingaddress
             )
         {
-            _orders = database_Service.Get_Orders_Collection();
+            _orders = databaseService.Get_Orders_Collection();
             _payments = payments;
             _accounts = accounts;
             _vouchers = voucher;
@@ -37,24 +37,24 @@ namespace Backend_WebLaptop.Respository
              return entity;
          }*/
 
-        public async Task<PagingResult<Order>> GetAllOrders(string? UserId, string? keywords, string? paymentID, int PageSize, int pageindex, int start, int end)
+        public async Task<PagingResult<Order>> GetAllOrders(string? userId, string? keywords, string? paymentId, int pageSize, int pageindex, int start, int end)
         {
             var startdate = DateTime.Now.AddDays(-start);
             var enddate = DateTime.Now.AddDays(-end);
             var filter = Builders<Order>.Filter;
-            var builder_filter = filter.Empty;
+            var builderFilter = filter.Empty;
 
             //&= là toán tử and
-            if (UserId != null)
-                builder_filter &= filter.Eq(e => e.AccountID, UserId);
-            if (paymentID != null)
-                builder_filter &= filter.Eq(e => e.Payment_methodID, paymentID);
+            if (userId != null)
+                builderFilter &= filter.Eq(e => e.AccountId, userId);
+            if (paymentId != null)
+                builderFilter &= filter.Eq(e => e.PaymentMethodId, paymentId);
             if (keywords != null)
-                builder_filter &= filter.Where(e => e.Status!.Last().Description!.Contains(keywords));
+                builderFilter &= filter.Where(e => e.Status!.Last().Description!.Contains(keywords));
 
-            builder_filter &= filter.And(filter.Gte(e => e.CreateAt, startdate), filter.Lte(e => e.CreateAt, enddate));
+            builderFilter &= filter.And(filter.Gte(e => e.CreateAt, startdate), filter.Lte(e => e.CreateAt, enddate));
 
-            var orders = await _orders.FindAsync(builder_filter);
+            var orders = await _orders.FindAsync(builderFilter);
 
             var list = await orders.ToListAsync();
 
@@ -62,7 +62,7 @@ namespace Backend_WebLaptop.Respository
             {
                 Items = list,
                 PageIndex = pageindex,
-                PageSize = PageSize
+                PageSize = pageSize
             };
         }
 
@@ -72,12 +72,12 @@ namespace Backend_WebLaptop.Respository
             var shipping = new List<Shipping>{
                     new Shipping{Description="Đã tạo đơn hàng",UpdateAt=DateTime.Now}
                 };
-            entity.Shipping_Address = await _shippingaddress.GetbyId(entity.Shipping_Address!.Id!);
+            entity.ShippingAddress = await _shippingaddress.GetbyId(entity.ShippingAddress!.Id!);
             if (await Validate(entity))
             {
                 entity.Total = await Gettoltal(entity.Items!);
                 entity.CreateAt = DateTime.Now;
-                if (entity.Payment_methodID != null)
+                if (entity.PaymentMethodId != null)
                     shipping.Add(new Shipping { Description = "Đang chờ thanh toán", UpdateAt = DateTime.Now });
                 entity.Status = shipping;
                 entity.Paid = 0;
@@ -113,10 +113,10 @@ namespace Backend_WebLaptop.Respository
                 updatebuilder.Add(Builders<Order>.Update.Set(e => e.Status, entity.Status));
             if (entity.Items != null)
                 updatebuilder.Add(Builders<Order>.Update.Set(e => e.Items, entity.Items));
-            if (entity.Payment_methodID != null)
-                updatebuilder.Add(Builders<Order>.Update.Set(e => e.Payment_methodID, entity.Payment_methodID));
-            if (entity.Shipping_Address != null)
-                updatebuilder.Add(Builders<Order>.Update.Set(e => e.Shipping_Address, entity.Shipping_Address));
+            if (entity.PaymentMethodId != null)
+                updatebuilder.Add(Builders<Order>.Update.Set(e => e.PaymentMethodId, entity.PaymentMethodId));
+            if (entity.ShippingAddress != null)
+                updatebuilder.Add(Builders<Order>.Update.Set(e => e.ShippingAddress, entity.ShippingAddress));
             if (entity.Paid != null)
                 updatebuilder.Add(Builders<Order>.Update.Set(e => e.Paid, entity.Paid));
             var update = Builders<Order>.Update.Combine(updatebuilder);
@@ -154,11 +154,11 @@ namespace Backend_WebLaptop.Respository
             }
             bool[] arr = new bool[]
             {
-              string.IsNullOrWhiteSpace(entity.Payment_methodID) ||(!string.IsNullOrWhiteSpace(entity.Payment_methodID)&& await  _payments.Exits(entity.Payment_methodID)),
-              !string.IsNullOrWhiteSpace(entity.AccountID)&& await _accounts.Exits(entity.AccountID),
+              string.IsNullOrWhiteSpace(entity.PaymentMethodId) ||(!string.IsNullOrWhiteSpace(entity.PaymentMethodId)&& await  _payments.Exits(entity.PaymentMethodId)),
+              !string.IsNullOrWhiteSpace(entity.AccountId)&& await _accounts.Exits(entity.AccountId),
                 entity.Items!=null&&entity.Items.Count>0,
                 entity.Status!=null&&entity.Status.Count>0,
-                entity.Shipping_Address!=null,
+                entity.ShippingAddress!=null,
             };
             foreach (var item in arr)
             {
@@ -172,16 +172,16 @@ namespace Backend_WebLaptop.Respository
             int sum = 0;
             foreach (var item in items)
             {
-                var product = await _products.GetbyId(item.ProductID!);
+                var product = await _products.GetbyId(item.ProductId!);
                 if (product != null)
                     sum += (product.Price) * item.Quantity;
             }
             return sum;
         }
 
-        async Task<int> DecreaseByVoucher(int total, string Code)
+        async Task<int> DecreaseByVoucher(int total, string code)
         {
-            var voucher = await _vouchers.GetVoucherbyCode(Code);
+            var voucher = await _vouchers.GetVoucherbyCode(code);
             if (total < voucher.MinApply)
                 return total;
             double result;

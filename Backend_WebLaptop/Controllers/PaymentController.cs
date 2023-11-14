@@ -8,18 +8,18 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class PaymentController : ControllerBase
     {
-        private readonly IPaymentRepository _I;
+        private readonly IPaymentRepository _i;
         public PaymentController(IPaymentRepository i)
         {
-            _I = i;
+            _i = i;
         }
         [HttpGet]
         public async Task<ActionResult> GetList_Payment()
         {
-            return StatusCode(200, new ResponseAPI<List<Payment>>
+            return StatusCode(200, new ResponseApi<List<Payment>>
             {
                 Message = "Success",
-                Result = await _I.GetAll()
+                Result = await _i.GetAll()
             });
         }
         [HttpPost]
@@ -27,10 +27,10 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                return StatusCode(201, new ResponseAPI<Payment>
+                return StatusCode(201, new ResponseApi<Payment>
                 {
                     Message = "Created",
-                    Result = await _I.Insert(entity)
+                    Result = await _i.Insert(entity)
                 });
             }
             catch
@@ -45,10 +45,10 @@ namespace Backend_WebLaptop.Controllers
             try
             {
                 entity.Id = id;
-                var IsSuccess = await _I.Update(entity);
-                return StatusCode(200, new ResponseAPI<string>
+                var isSuccess = await _i.Update(entity);
+                return StatusCode(200, new ResponseApi<string>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch
@@ -62,10 +62,10 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                var IsSuccess = await _I.DeletebyId(id);
-                return StatusCode(200, new ResponseAPI<string>
+                var isSuccess = await _i.DeletebyId(id);
+                return StatusCode(200, new ResponseApi<string>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch

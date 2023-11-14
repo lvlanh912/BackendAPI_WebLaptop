@@ -9,27 +9,27 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly IAccountRepository _I;
-        private readonly ICartRepository _Cart;
+        private readonly IAccountRepository _i;
+        private readonly ICartRepository _cart;
         public UsersController(IAccountRepository i, ICartRepository cart)
         {
-            _I = i;
-            _Cart = cart;
+            _i = i;
+            _cart = cart;
         }
         [HttpGet]
-        public async Task<ActionResult> GETALL(string? keywords,string? type, DateTime? startdate, DateTime? enddate, int? role, bool? gender, string? sort, int pageIndex = 1, int pageSize = 5)
+        public async Task<ActionResult> Getall(string? keywords,string? type, DateTime? startdate, DateTime? enddate, int? role, bool? gender, string? sort, int pageIndex = 1, int pageSize = 5)
         {
             try
             {
-                return StatusCode(200, new ResponseAPI<PagingResult<Account>>
+                return StatusCode(200, new ResponseApi<PagingResult<Account>>
                 {
-                    Result = await _I.GetAll(keywords,type, startdate, enddate, role, gender, pageIndex, pageSize, sort ?? "date"),
+                    Result = await _i.GetAll(keywords,type, startdate, enddate, role, gender, pageIndex, pageSize, sort ?? "date"),
                     Message = "Success"
                 });
             }
-            catch
+            catch(Exception ex)
             {
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
         }
         [HttpGet("{id}")]
@@ -37,8 +37,8 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                var rs = await _I.GetbyId(id);
-                return StatusCode(200, new ResponseAPI<Account>
+                var rs = await _i.GetbyId(id);
+                return StatusCode(200, new ResponseApi<Account>
                 {
                     Result = rs,
                     Message = rs != null ? "Success" : "Invalid user"
@@ -50,49 +50,49 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost]
-        public async Task<ActionResult> ADD([FromForm] string data, List<IFormFile>? images)
+        public async Task<ActionResult> Add([FromForm] string data, List<IFormFile>? images)
         {
             try
             {
-                var a = await _I.Insert(new ImageUpload<Account>
+                var a = await _i.Insert(new ImageUpload<Account>
                 {
-                    data = JsonConvert.DeserializeObject<Account>(data),
-                    images = images
+                    Data = JsonConvert.DeserializeObject<Account>(data),
+                    Images = images
                 });
-                await _Cart.Create(a.Id!);
-                return StatusCode(201, new ResponseAPI<string> { Message = "Create Success" }.Format());
+                await _cart.Create(a.Id!);
+                return StatusCode(201, new ResponseApi<string> { Message = "Create Success" }.Format());
             }
             catch (Exception ex)
             {
-                return BadRequest(new ResponseAPI<string> { Message = ex.Message }.Format());
+                return BadRequest(new ResponseApi<string> { Message = ex.Message });
             }
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> UPDATE([FromForm] string data, List<IFormFile>? images)
+        public async Task<ActionResult> Update([FromForm] string data, List<IFormFile>? images)
         {
             try
             {
                 var account = JsonConvert.DeserializeObject<Account>(data);
                 account!.Id = this.HttpContext.GetRouteValue("id")!.ToString();
-                await _I.Update(new ImageUpload<Account>
+                await _i.Update(new ImageUpload<Account>
                 {
-                    data = account,
-                    images = images
+                    Data = account,
+                    Images = images
                 });
-                return StatusCode(200, new ResponseAPI<string> { Message = "Update Successfull" }.Format());
+                return StatusCode(200, new ResponseApi<string> { Message = "Update Successfull" }.Format());
             }
-            catch
+            catch(Exception ex)
             {
-                return BadRequest();
+                return BadRequest( new ResponseApi<string> { Message=ex.Message});
             }
         }
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DELETE(string id)
+        public async Task<ActionResult> Delete(string id)
         {
             try
             {
-                string result = await _I.DeletebyId(id) == true ? "deleted" : "This item is does not exits";
-                return StatusCode(200, new ResponseAPI<string> { Message = result }.Format());
+                string result = await _i.DeletebyId(id) == true ? "deleted" : "This item is does not exits";
+                return StatusCode(200, new ResponseApi<string> { Message = result }.Format());
             }
             catch
             {

@@ -3,7 +3,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace Backend_WebLaptop
 {
-    public class ResponseAPI<T>
+    public class ResponseApi<T>
     {
         public string? Message { get; set; }
         public T? Result { get; set; }

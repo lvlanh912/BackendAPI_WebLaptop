@@ -9,7 +9,7 @@ namespace Backend_WebLaptop.IRespository
 
         Task<Order> GetOrderbyId(string id);
 
-        Task<PagingResult<Order>> GetAllOrders(string? UserId, string? keywords, string? paymentID, int PageSize,
+        Task<PagingResult<Order>> GetAllOrders(string? userId, string? keywords, string? paymentId, int pageSize,
            int pageindex, int start, int end);
 
         Task<Order> EditOrder(Order entity, string id);

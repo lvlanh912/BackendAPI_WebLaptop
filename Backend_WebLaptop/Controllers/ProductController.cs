@@ -9,27 +9,27 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class ProductController : ControllerBase
     {
-        private readonly IProductRepository _I;
+        private readonly IProductRepository _i;
         public ProductController(IProductRepository i)
         {
-            _I = i;
+            _i = i;
         }
         [HttpGet]
-        public async Task<ActionResult> Get_Products(int? pageindex, int? size, string? keywords, string? Brand,
-            string? Category, int? min, int? max)
+        public async Task<ActionResult> Get_Products(int? pageindex, int? size, string? keywords, string? brand,
+            string? category, int? min, int? max)
         {
             try
             {
-                return StatusCode(200, new ResponseAPI<PagingResult<Product>>
+                return StatusCode(200, new ResponseApi<PagingResult<Product>>
                 {
                     Message = "Success",
-                    Result = await _I.GetAll(new ProductFilter
+                    Result = await _i.GetAll(new ProductFilter
                     {
-                        Brand = Brand,
+                        Brand = brand,
                         Keywords = keywords,
-                        Category = Category,
-                        Min_price = min,
-                        Max_price = max
+                        Category = category,
+                        MinPrice = min,
+                        MaxPrice = max
                     }, pageindex ?? 1, size ?? 10)
                 });
             }
@@ -43,10 +43,10 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                return StatusCode(200, new ResponseAPI<Product>
+                return StatusCode(200, new ResponseApi<Product>
                 {
                     Message = "Success",
-                    Result = await _I.GetbyId(id)
+                    Result = await _i.GetbyId(id)
                 });
             }
             catch
@@ -59,13 +59,13 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                return StatusCode(201, new ResponseAPI<bool>
+                return StatusCode(201, new ResponseApi<bool>
                 {
                     Message = "Created",
-                    Result = await _I.Insert(new ImageUpload<Product>
+                    Result = await _i.Insert(new ImageUpload<Product>
                     {
-                        data = JsonConvert.DeserializeObject<Product>(data),
-                        images = images
+                        Data = JsonConvert.DeserializeObject<Product>(data),
+                        Images = images
                     })
                 });
             }
@@ -80,10 +80,10 @@ namespace Backend_WebLaptop.Controllers
             try
             {
                 entity.Id = id;
-                var IsSuccess = await _I.Update(entity);
-                return StatusCode(200, new ResponseAPI<string>
+                var isSuccess = await _i.Update(entity);
+                return StatusCode(200, new ResponseApi<string>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch
@@ -97,10 +97,10 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                var IsSuccess = await _I.DeletebyId(id);
-                return StatusCode(200, new ResponseAPI<string>
+                var isSuccess = await _i.DeletebyId(id);
+                return StatusCode(200, new ResponseApi<string>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch
@@ -114,8 +114,8 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                var rs = await _I.DecreaseQuantity(entity);
-                return StatusCode(200, new ResponseAPI<string>
+                var rs = await _i.DecreaseQuantity(entity);
+                return StatusCode(200, new ResponseApi<string>
                 {
                     Message = rs ? "Success" : "Failed"
                 }.Format());

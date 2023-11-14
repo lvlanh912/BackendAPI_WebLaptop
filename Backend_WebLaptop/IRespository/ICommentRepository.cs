@@ -4,7 +4,7 @@ namespace Backend_WebLaptop.IRespository
 {
     public interface ICommentRepository
     {
-        Task<PagingResult<Comment>> GetAll(int pageindex, string ProductId, int size);
+        Task<PagingResult<Comment>> GetAll(int pageindex, string productId, int size);
         Task<Comment> GetbyId(string id);
         Task<bool> DeletebyId(string id);
         Task<bool> Insert(Comment entity);

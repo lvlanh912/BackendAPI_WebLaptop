@@ -8,20 +8,20 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class VoucherController : ControllerBase
     {
-        private readonly IVoucherRepository _I;
+        private readonly IVoucherRepository _i;
         public VoucherController(IVoucherRepository i)
         {
-            _I = i;
+            _i = i;
         }
         [HttpGet]
         public async Task<ActionResult> Getall(string? keywords,DateTime? createTimeStart, DateTime? createTimeEnd, bool? disable, string? sort, int pageindex = 1, int pagesize = 10)
         {
             try
             {
-                return StatusCode(200, new ResponseAPI<PagingResult<Voucher>>
+                return StatusCode(200, new ResponseApi<PagingResult<Voucher>>
                 {
                     Message = "Success",
-                    Result = await _I.GetAllVouchers(keywords, createTimeStart, createTimeEnd, disable, pagesize, pageindex,sort??"create" )
+                    Result = await _i.GetAllVouchers(keywords, createTimeStart, createTimeEnd, disable, pagesize, pageindex,sort??"create" )
                 });
             }
             catch (Exception ex)
@@ -36,10 +36,10 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                return StatusCode(200, new ResponseAPI<Voucher>
+                return StatusCode(200, new ResponseApi<Voucher>
                 {
                     Message = "Success",
-                    Result = await _I.GetVoucherbyId(id)
+                    Result = await _i.GetVoucherbyId(id)
                 });
             }
             catch
@@ -49,14 +49,14 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpGet("GetbyCode")]
-        public async Task<ActionResult> GetbyCode(string Code)
+        public async Task<ActionResult> GetbyCode(string code)
         {
             try
             {
-                return StatusCode(200, new ResponseAPI<Voucher>
+                return StatusCode(200, new ResponseApi<Voucher>
                 {
                     Message = "Success",
-                    Result = await _I.GetVoucherbyCode(Code)
+                    Result = await _i.GetVoucherbyCode(code)
                 });
             }
             catch
@@ -71,10 +71,10 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                return StatusCode(201, new ResponseAPI<Voucher>
+                return StatusCode(201, new ResponseApi<Voucher>
                 {
                     Message = "Success",
-                    Result = await _I.CreateVoucher(entity)
+                    Result = await _i.CreateVoucher(entity)
                 });
             }
             catch (Exception ex)
@@ -87,10 +87,10 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                return StatusCode(200, new ResponseAPI<Voucher>
+                return StatusCode(200, new ResponseApi<Voucher>
                 {
                     Message = "Updated",
-                    Result = await _I.EditVoucher(entity, id)
+                    Result = await _i.EditVoucher(entity, id)
                 });
             }
             catch (Exception ex)
@@ -99,13 +99,13 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPost("disable")]
-        public async Task<ActionResult> Disable(string voucherID)
+        public async Task<ActionResult> Disable(string voucherId)
         {
             try
             {
-                return StatusCode(200, new ResponseAPI<string>
+                return StatusCode(200, new ResponseApi<string>
                 {
-                    Message = await _I.DisableVoucher(voucherID) ? "sucess" : "failed"
+                    Message = await _i.DisableVoucher(voucherId) ? "sucess" : "failed"
                 });
             }
             catch
@@ -119,10 +119,10 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                var rs = await _I.DeleteVoucher(id);
+                var rs = await _i.DeleteVoucher(id);
                 if (rs)
-                    return StatusCode(200, new ResponseAPI<string> { Message = "success" }.Format());
-                return StatusCode(400, new ResponseAPI<string> { Message = "Something is error" }.Format());
+                    return StatusCode(200, new ResponseApi<string> { Message = "success" }.Format());
+                return StatusCode(400, new ResponseApi<string> { Message = "Something is error" }.Format());
             }
             catch
             {

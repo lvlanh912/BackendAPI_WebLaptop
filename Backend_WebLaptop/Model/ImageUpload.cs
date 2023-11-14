@@ -2,7 +2,7 @@
 {
     public class ImageUpload<T>
     {
-        public List<IFormFile>? images { get; set; } = null;
-        public T? data { get; set; }
+        public List<IFormFile>? Images { get; set; } = null;
+        public T? Data { get; set; }
     }
 }

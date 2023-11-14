@@ -7,10 +7,10 @@ namespace Backend_WebLaptop.Respository
 {
     public class CartRepository : ICartRepository
     {
-        private readonly IMongoCollection<Cart> Carts;
-        public CartRepository(IDatabase_Service database_Service)
+        private readonly IMongoCollection<Cart> _carts;
+        public CartRepository(IDatabaseService databaseService)
         {
-            Carts = database_Service.Get_Carts_Collection();
+            _carts = databaseService.Get_Carts_Collection();
         }
 
         public async Task<bool> AddtoCart(CartItem cartItem, string accountId)
@@ -29,7 +29,7 @@ namespace Backend_WebLaptop.Respository
                 curentCart.Items!.Find(e => e.ProductId == cartItem.ProductId)!.Quantity += cartItem.Quantity;
                 update = Builders<Cart>.Update.Set(e => e.Items, curentCart.Items);
             }
-            var a = await Carts.UpdateOneAsync(filter: e => e.AccountID == accountId, update);
+            var a = await _carts.UpdateOneAsync(filter: e => e.AccountId == accountId, update);
             return a.ModifiedCount > 0;
         }
 
@@ -45,11 +45,11 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<bool> Create(string userId)
         {
-            await Carts.InsertOneAsync(new Cart { AccountID = userId, Items = new List<CartItem>() });
+            await _carts.InsertOneAsync(new Cart { AccountId = userId, Items = new List<CartItem>() });
             return true;
         }
 
-        public async Task<bool> DeleteItem(CartItem Item_remove, string userId)
+        public async Task<bool> DeleteItem(CartItem itemRemove, string userId)
         {
             var curentCart = await GetCart(userId);
             if (curentCart == null)
@@ -59,32 +59,35 @@ namespace Backend_WebLaptop.Respository
             foreach (var item in curentCart.Items)
             {
                 //tìm sản phẩm cần xoá trong danh sách sản phẩm
-                if (Item_remove.ProductId == item.ProductId)
+                if (itemRemove.ProductId == item.ProductId)
                 {
                     //nếu sau khi xoá sản phẩm đó có số lượng bằng hoặc bé hơn 0 thì xoá khỏi giỏ hàng
-                    if (item.Quantity <= Item_remove.Quantity)
+                    if (item.Quantity <= itemRemove.Quantity)
                         curentCart.Items.Remove(item);
                     //trường hợp còn lại chỉ cần thay đổi số lượng của sản phẩm trong giỏ hàng bằng số hiện tại trừ số truyền vào
                     else
                     {
-                        item.Quantity -= Item_remove.Quantity;
+                        item.Quantity -= itemRemove.Quantity;
                     }
                 }
             }
             var update = Builders<Cart>.Update.Set(e => e.Items, curentCart.Items);
-            var rs = await Carts.UpdateOneAsync(e => e.AccountID == userId, update);
+            var rs = await _carts.UpdateOneAsync(e => e.AccountId == userId, update);
             return rs.ModifiedCount > 0;
         }
 
-        public async Task<bool> EmptyCart(string userID)
+        public async Task<bool> EmptyCart(string userId)
         {
             //thay items= danh sách trống
             var update = Builders<Cart>.Update.Set(e => e.Items, new List<CartItem>());
-            var rs = await Carts.UpdateOneAsync(e => e.AccountID == userID, update);
+            var rs = await _carts.UpdateOneAsync(e => e.AccountId == userId, update);
             return rs.ModifiedCount > 0;
         }
-
-        public async Task<Cart> GetCart(string userID) =>
-            await Carts.FindSync(e => e.AccountID == userID).FirstOrDefaultAsync();
+        public async Task<Cart> GetCart(string userId) =>
+            await _carts.FindSync(e => e.AccountId == userId).FirstOrDefaultAsync();
+        
+        //xoá giỏ hàng trong database của user
+        public async Task DeleteCart(string userId) =>
+          await _carts.DeleteOneAsync(e => e.AccountId == userId);
     }
 }

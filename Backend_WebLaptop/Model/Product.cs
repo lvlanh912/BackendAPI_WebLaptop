@@ -30,7 +30,7 @@ namespace Backend_WebLaptop.Model
 
         [BsonRepresentation(BsonType.ObjectId)]
         [BsonElement("Product_CategoriesID")]
-        public List<string>? CategoryID { get; set; }
+        public List<string>? CategoryId { get; set; }
 
         public double? Weight { get; set; }
 
@@ -38,7 +38,7 @@ namespace Backend_WebLaptop.Model
     }
     public class Speacial
     {
-        public string? k { get; set; }
-        public string? v { get; set; }
+        public string? K { get; set; }
+        public string? V { get; set; }
     }
 }

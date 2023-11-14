@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddControllers();
-builder.Services.AddSingleton<IDatabase_Service, Database_Service>();
+builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 builder.Services.Configure<DatabaseConfig>(
     builder.Configuration.GetSection("Database")
 );

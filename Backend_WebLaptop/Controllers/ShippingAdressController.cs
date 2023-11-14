@@ -8,30 +8,30 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class ShippingAddressController : ControllerBase
     {
-        private readonly IShippingAddressRepository _I;
+        private readonly IShippingAddressRepository _i;
         public ShippingAddressController(IShippingAddressRepository i)
         {
-            _I = i;
+            _i = i;
         }
-        [HttpGet("{userID}/shipping-address")]
-        public async Task<ActionResult> GetList_ShippingAddress(string userID)
+        [HttpGet("{userId}/shipping-address")]
+        public async Task<ActionResult> GetList_ShippingAddress(string userId)
         {
-            return StatusCode(200, new ResponseAPI<List<ShippingAddress>>
+            return StatusCode(200, new ResponseApi<List<ShippingAddress>>
             {
                 Message = "Success",
-                Result = await _I.GetAll(userID)
+                Result = await _i.GetAll(userId)
             });
         }
-        [HttpPost("{userID}/shipping-address")]
+        [HttpPost("{userId}/shipping-address")]
         public async Task<ActionResult> Insert_new(ShippingAddress shippingAddress)
         {
             try
             {
                 shippingAddress.AccountId = this.RouteData.Values["userID"]!.ToString();
-                return StatusCode(201, new ResponseAPI<ShippingAddress>
+                return StatusCode(201, new ResponseApi<ShippingAddress>
                 {
                     Message = "Created",
-                    Result = await _I.Insert(shippingAddress)
+                    Result = await _i.Insert(shippingAddress)
                 });
             }
             catch
@@ -40,17 +40,17 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest();
             }
         }
-        [HttpPut("{userID}/shipping-address/{id}")]
+        [HttpPut("{userId}/shipping-address/{id}")]
         public async Task<ActionResult> Update(string id, ShippingAddress shippingAddress)
         {
             try
             {
                 shippingAddress.AccountId = this.RouteData.Values["userID"]!.ToString();
                 shippingAddress.Id = id;
-                var IsSuccess = await _I.Update(shippingAddress);
-                return StatusCode(200, new ResponseAPI<ShippingAddress>
+                var isSuccess = await _i.Update(shippingAddress);
+                return StatusCode(200, new ResponseApi<ShippingAddress>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch
@@ -59,15 +59,15 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest();
             }
         }
-        [HttpDelete("{userID}/shipping-address/{id}")]
+        [HttpDelete("{userId}/shipping-address/{id}")]
         public async Task<ActionResult> Delete(string id)
         {
             try
             {
-                var IsSuccess = await _I.DeletebyId(id);
-                return StatusCode(200, new ResponseAPI<ShippingAddress>
+                var isSuccess = await _i.DeletebyId(id);
+                return StatusCode(200, new ResponseApi<ShippingAddress>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch

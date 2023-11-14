@@ -8,16 +8,16 @@ namespace Backend_WebLaptop.Respository
 {
     public class AccountRepository : IAccountRepository
     {
-        private readonly IMongoCollection<Account>? Accounts;
-        private readonly IUploadImageRepository _Upload;
-        private readonly ICartRepository _Carts;
+        private readonly IMongoCollection<Account>? _accounts;
+        private readonly IUploadImageRepository _upload;
+        private readonly ICartRepository _carts;
         private readonly IAddressRepository _address;
 
-        public AccountRepository(IDatabase_Service database_Service, IUploadImageRepository Upload, ICartRepository carts, IAddressRepository address)
+        public AccountRepository(IDatabaseService databaseService, IUploadImageRepository upload, ICartRepository carts, IAddressRepository address)
         {
-            Accounts = database_Service.Get_Accounts_Collection();
-            _Upload = Upload;
-            _Carts = carts;
+            _accounts = databaseService.Get_Accounts_Collection();
+            _upload = upload;
+            _carts = carts;
             _address = address;
         }
         public async Task<PagingResult<Account>> GetAll(string? keywords, string? type, DateTime? startdate, DateTime? enddate, int? role, bool? gender, int pageindex, int pagesize, string sort)
@@ -29,21 +29,21 @@ namespace Backend_WebLaptop.Respository
             {
                 accounts = type switch
                 {
-                    "fullname"=> await Accounts.Find(filter: e => e.Fullname!.Contains(keywords)).ToListAsync(),
-                    "email"=> await Accounts.Find(filter: e => e.Email!.Contains(keywords)).ToListAsync(),
-                    "address"=> await Accounts.Find(filter: e => e.Address!.Contains(keywords)).ToListAsync(),
-                    "phone"=> await Accounts.Find(filter: e => e.Phone!.Equals(keywords)).ToListAsync(),
-                    _ => await Accounts.Find(filter: e => e.Username!.Contains(keywords) || e.Fullname!.Trim().Contains(keywords)).ToListAsync(),
+                    "fullname"=> await _accounts.Find(filter: e => e.Fullname!.Contains(keywords)).ToListAsync(),
+                    "email"=> await _accounts.Find(filter: e => e.Email!.Contains(keywords)).ToListAsync(),
+                    "address"=> await _accounts.Find(filter: e => e.Address!.Contains(keywords)).ToListAsync(),
+                    "phone"=> await _accounts.Find(filter: e => e.Phone!.Equals(keywords)).ToListAsync(),
+                    _ => await _accounts.Find(filter: e => e.Username!.Contains(keywords) || e.Fullname!.Trim().Contains(keywords)).ToListAsync(),
                 };
             }
             else
-                accounts = await Accounts.Find(_ => true).ToListAsync();
+                accounts = await _accounts.Find(_ => true).ToListAsync();
             if (startdate != null)
                 accounts = accounts.Where(e => e.CreateAt >= startdate).ToList();
             if (enddate != null)
                 accounts = accounts.Where(e => e.CreateAt <= enddate).ToList();
             if (role != null)
-                accounts = accounts.Where(e => e.Roles == role).ToList();
+                accounts = accounts.Where(e => e.Role == role).ToList();
             if (gender != null)
                 accounts = accounts.Where(e => e.Sex == gender).ToList();
 
@@ -65,65 +65,66 @@ namespace Backend_WebLaptop.Respository
         }
         public async Task<bool> DeletebyId(string id)
         {
-            var rs = await Accounts.DeleteOneAsync(e => e.Id == id);
-            return rs.DeletedCount != 0;
+            var rs = await _accounts.FindOneAndDeleteAsync(e => e.Id == id);
+            if (rs != null&&rs.ProfileImage!=null)
+                await _upload.Delete_Image(1, rs.ProfileImage);
+            await _carts.DeleteCart(id);
+            return rs != null;
         }
 
         public async Task<bool> Exits(string id)
         {
-            var rs = await Accounts.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+            var rs = await _accounts.FindSync(e => e.Id == id).FirstOrDefaultAsync();
             return rs != null;
         }
         public async Task<bool> ExitsByUserName(string username)
         {
-            var rs = await Accounts.FindSync(e => e.Username == username).FirstOrDefaultAsync();
+            var rs = await _accounts.FindSync(e => e.Username == username).FirstOrDefaultAsync();
             return rs != null;
         }
 
-
-        public async Task<Account> GetbyId(string id) => await Accounts.Find(e => e.Id == id).FirstOrDefaultAsync();
+        public async Task<Account> GetbyId(string id) => await _accounts.Find(e => e.Id == id).FirstOrDefaultAsync();
 
         public async Task<Account> Insert(ImageUpload<Account> entity)
         {
-            if (string.IsNullOrWhiteSpace(entity.data!.Username) || string.IsNullOrWhiteSpace(entity.data.Password) ||
-                string.IsNullOrWhiteSpace(entity.data.Email))
+            if (string.IsNullOrWhiteSpace(entity.Data!.Username) || string.IsNullOrWhiteSpace(entity.Data.Password) ||
+                string.IsNullOrWhiteSpace(entity.Data.Email))
                 throw new Exception("Data invalid");
-            if (await ExitsByUserName(entity.data.Username))
+            if (await ExitsByUserName(entity.Data.Username))
                 throw new Exception("username has been taken");
-            entity.data.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
-            if (entity.images != null && entity.images.Count > 0)
-                entity.data.Profile_image = await _Upload.UploadProfile_Image(entity);
-            entity.data.Address += '-' + await _address.GetAddress(entity.data.WardID!);
-            await Accounts!.InsertOneAsync(entity.data);
+            entity.Data.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
+            if (entity.Images != null && entity.Images.Count > 0)
+                entity.Data.ProfileImage = await _upload.UploadProfile_Image(entity);
+            entity.Data.Address += '-' + await _address.GetAddress(entity.Data.WardId!);
+            await _accounts!.InsertOneAsync(entity.Data);
             //khởi tạo giỏ hàng
-            await _Carts.Create(entity.data.Id);
-            return entity.data;
+            await _carts.Create(entity.Data.Id);
+            return entity.Data;
         }
         public async Task<Account> Update(ImageUpload<Account> entity)
         {
-            var curent = await GetbyId(entity.data!.Id!);
-            if (curent == null)
+            var curent = await GetbyId(entity.Data!.Id!) ?? throw new Exception("This record does not exits");
+            if (Convert.ToInt32(entity.Data.Phone) > 999999999)
+                throw new Exception("Số điện thoại phải 10 chữ số");
+            entity.Data.Username = curent.Username;//cannot update username
+            entity.Data.ProfileImage ??= curent.ProfileImage;
+            entity.Data.Password ??= curent.Password;
+            entity.Data.Fullname ??= curent.Fullname;
+            entity.Data.Email ??= curent.Email;
+            entity.Data.Address ??= curent.Address;
+            entity.Data.Role ??= curent.Role;
+            entity.Data.CreateAt = curent.CreateAt;
+            entity.Data.WardId ??= curent.WardId;
+            entity.Data.Sex ??= curent.Sex;
+            entity.Data.Phone ??= curent.Phone;
+            if (entity.Images!.Count != 0)
             {
-                throw new Exception("This record does not exits");
-            }
-            entity.data.Username = curent.Username;//cannot update username
-            entity.data.Password ??= curent.Password;
-            entity.data.Fullname ??= curent.Fullname;
-            entity.data.Email ??= curent.Email;
-            entity.data.Address ??= curent.Address;
-            entity.data.Roles ??= curent.Roles;
-            entity.data.CreateAt = curent.CreateAt;
-            entity.data.WardID ??= curent.WardID;
-            entity.data.Sex ??= curent.Sex;
-            entity.data.Phone ??= curent.Phone;
-            if (entity.images!.Count != 0)
-            {
-                entity.data.Profile_image = await _Upload.UploadProfile_Image(entity);
+                entity.Data.ProfileImage = await _upload.UploadProfile_Image(entity);
             }
             else
-                entity.data.Profile_image = curent.Profile_image;
-            await Accounts.FindOneAndReplaceAsync(x => x.Id == entity.data.Id, entity.data);
-            return entity.data;
+                entity.Data.ProfileImage = curent.ProfileImage;
+            await _accounts.FindOneAndReplaceAsync(x => x.Id == entity.Data.Id, entity.Data);
+            return entity.Data;
         }
 
     }

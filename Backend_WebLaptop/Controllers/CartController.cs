@@ -8,19 +8,19 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class CartController : ControllerBase
     {
-        private readonly ICartRepository _I;
+        private readonly ICartRepository _i;
         public CartController(ICartRepository i)
         {
-            _I = i;
+            _i = i;
         }
         [HttpGet]
         //sau thêu authentication vào đây
         public async Task<ActionResult> Get(string accountid)
         {
-            return StatusCode(200, new ResponseAPI<Cart>
+            return StatusCode(200, new ResponseApi<Cart>
             {
                 Message = "Success",
-                Result = await _I.GetCart(accountid)
+                Result = await _i.GetCart(accountid)
             });
         }
         [HttpPost("add")]
@@ -28,9 +28,9 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                return await _I.AddtoCart(item, accountid)
-                    ? StatusCode(200, new ResponseAPI<string> { Message = "Success" }.Format())
-                    : StatusCode(400, new ResponseAPI<string> { Message = "failed" }.Format());
+                return await _i.AddtoCart(item, accountid)
+                    ? StatusCode(200, new ResponseApi<string> { Message = "Success" }.Format())
+                    : StatusCode(400, new ResponseApi<string> { Message = "failed" }.Format());
             }
             catch
             {
@@ -43,9 +43,9 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                return await _I.DeleteItem(item, accountid)
-                    ? StatusCode(200, new ResponseAPI<string> { Message = "Success" }.Format())
-                    : StatusCode(400, new ResponseAPI<string> { Message = "failed" }.Format());
+                return await _i.DeleteItem(item, accountid)
+                    ? StatusCode(200, new ResponseApi<string> { Message = "Success" }.Format())
+                    : StatusCode(400, new ResponseApi<string> { Message = "failed" }.Format());
             }
             catch
             {
@@ -54,14 +54,14 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpDelete]
-        public async Task<ActionResult> DeleteCart(string Userid)
+        public async Task<ActionResult> DeleteCart(string userid)
         {
             try
             {
-                var IsSuccess = await _I.EmptyCart(Userid);
-                return StatusCode(200, new ResponseAPI<string>
+                var isSuccess = await _i.EmptyCart(userid);
+                return StatusCode(200, new ResponseApi<string>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch

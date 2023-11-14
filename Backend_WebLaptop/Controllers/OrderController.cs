@@ -8,19 +8,19 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
-        private readonly IOrderRepository _I;
+        private readonly IOrderRepository _i;
         public OrderController(IOrderRepository i)
         {
-            _I = i;
+            _i = i;
         }
         [HttpGet]
         //role admin
-        public async Task<ActionResult> Get(string? accountid, string? keywords, string? paymentID, int pagesize = 10, int pageindex = 1, int start = 30, int end = 0)
+        public async Task<ActionResult> Get(string? accountid, string? keywords, string? paymentId, int pagesize = 10, int pageindex = 1, int start = 30, int end = 0)
         {
-            return StatusCode(200, new ResponseAPI<PagingResult<Order>>
+            return StatusCode(200, new ResponseApi<PagingResult<Order>>
             {
                 Message = "Success",
-                Result = await _I.GetAllOrders(accountid, keywords, paymentID, pagesize, pageindex, start, end)
+                Result = await _i.GetAllOrders(accountid, keywords, paymentId, pagesize, pageindex, start, end)
             });
         }
         //role admin
@@ -29,7 +29,7 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                var a = await _I.CreateOrder(entity);
+                var a = await _i.CreateOrder(entity);
                 return StatusCode(200, a);
             }
             catch (Exception ex)
@@ -44,8 +44,8 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                var rs = await _I.DeleteOrder(id);
-                return StatusCode(rs ? 204 : 400, new ResponseAPI<string> { Message = rs ? "success" : "failed" }.Format());
+                var rs = await _i.DeleteOrder(id);
+                return StatusCode(rs ? 204 : 400, new ResponseApi<string> { Message = rs ? "success" : "failed" }.Format());
             }
             catch (Exception ex)
             {
@@ -54,12 +54,12 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> edit(Order entity, string id)
+        public async Task<ActionResult> Edit(Order entity, string id)
         {
             try
             {
-                var rs = await _I.EditOrder(entity, id);
-                return StatusCode(rs != entity ? 200 : 401, new ResponseAPI<string> { Message = rs != entity ? "success" : "failed" }.Format());
+                var rs = await _i.EditOrder(entity, id);
+                return StatusCode(rs != entity ? 200 : 401, new ResponseApi<string> { Message = rs != entity ? "success" : "failed" }.Format());
             }
             catch (Exception ex)
             {

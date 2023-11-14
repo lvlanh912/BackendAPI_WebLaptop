@@ -8,45 +8,45 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class AddressController : ControllerBase
     {
-        private readonly IAddressRepository _I;
+        private readonly IAddressRepository _i;
         public AddressController(IAddressRepository i)
         {
-            _I = i;
+            _i = i;
         }
         [HttpGet("provinces")]
         public async Task<ActionResult> GetList_Provinces()
         {
-            return StatusCode(200, new ResponseAPI<List<Province>>
+            return StatusCode(200, new ResponseApi<List<Province>>
             {
                 Message = "Success",
-                Result = await _I.GetAllProvince()
+                Result = await _i.GetAllProvince()
             });
         }
         [HttpGet("districts")]
-        public async Task<ActionResult> GetList_District(int ProvinceCode)
+        public async Task<ActionResult> GetList_District(int provinceCode)
         {
-            return StatusCode(200, new ResponseAPI<List<District>>
+            return StatusCode(200, new ResponseApi<List<District>>
             {
                 Message = "Success",
-                Result = await _I.GetListDistrict(ProvinceCode)
+                Result = await _i.GetListDistrict(provinceCode)
             });
         }
         [HttpGet("wards")]
-        public async Task<ActionResult> GetList_Ward(int DistrictCode)
+        public async Task<ActionResult> GetList_Ward(int districtCode)
         {
-            return StatusCode(200, new ResponseAPI<List<Ward>>
+            return StatusCode(200, new ResponseApi<List<Ward>>
             {
                 Message = "Success",
-                Result = await _I.GetListWard(DistrictCode)
+                Result = await _i.GetListWard(districtCode)
             });
         }
         [HttpGet("ward{id}")]
         public async Task<ActionResult> Get_Ward(string id)
         {
-            return StatusCode(200, new ResponseAPI<Ward>
+            return StatusCode(200, new ResponseApi<Ward>
             {
                 Message = "Success",
-                Result = await _I.GetWardbyId(id)
+                Result = await _i.GetWardbyId(id)
             });
         }
     }

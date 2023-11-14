@@ -8,21 +8,21 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class CommentController : ControllerBase
     {
-        private readonly ICommentRepository _I;
+        private readonly ICommentRepository _i;
         public CommentController(ICommentRepository i)
         {
-            _I = i;
+            _i = i;
         }
         [HttpGet]
         public async Task<ActionResult> Get_Commnets_byProductId(int pageindex, int size)
         {
             try
             {
-                string ProductId = this.RouteData.Values["ProductId"]!.ToString()!;
-                return StatusCode(200, new ResponseAPI<PagingResult<Comment>>
+                string productId = this.RouteData.Values["ProductId"]!.ToString()!;
+                return StatusCode(200, new ResponseApi<PagingResult<Comment>>
                 {
                     Message = "Success",
-                    Result = await _I.GetAll(pageindex, ProductId, size)
+                    Result = await _i.GetAll(pageindex, productId, size)
                 });
             }
             catch
@@ -35,12 +35,12 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                string ProductId = this.RouteData.Values["ProductId"]!.ToString()!;
-                entity.ProductId = ProductId;
-                return StatusCode(201, new ResponseAPI<bool>
+                string productId = this.RouteData.Values["ProductId"]!.ToString()!;
+                entity.ProductId = productId;
+                return StatusCode(201, new ResponseApi<bool>
                 {
                     Message = "Created",
-                    Result = await _I.Insert(entity)
+                    Result = await _i.Insert(entity)
                 }); ;
             }
             catch
@@ -55,10 +55,10 @@ namespace Backend_WebLaptop.Controllers
             try
             {
                 entity.Id = id;
-                var IsSuccess = await _I.Update(entity);
-                return StatusCode(200, new ResponseAPI<string>
+                var isSuccess = await _i.Update(entity);
+                return StatusCode(200, new ResponseApi<string>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch
@@ -72,10 +72,10 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                var IsSuccess = await _I.DeletebyId(id);
-                return StatusCode(200, new ResponseAPI<string>
+                var isSuccess = await _i.DeletebyId(id);
+                return StatusCode(200, new ResponseApi<string>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch

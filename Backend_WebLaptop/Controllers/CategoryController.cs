@@ -8,18 +8,18 @@ namespace Backend_WebLaptop.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
-        private readonly ICategoryRepository _I;
+        private readonly ICategoryRepository _i;
         public CategoryController(ICategoryRepository i)
         {
-            _I = i;
+            _i = i;
         }
         [HttpGet]
         public async Task<ActionResult> GetList_Category()
         {
-            return StatusCode(200, new ResponseAPI<List<Category>>
+            return StatusCode(200, new ResponseApi<List<Category>>
             {
                 Message = "Success",
-                Result = await _I.GetAll()
+                Result = await _i.GetAll()
             });
         }
         [HttpPost]
@@ -27,16 +27,15 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                return StatusCode(201, new ResponseAPI<Category>
+                return StatusCode(201, new ResponseApi<Category>
                 {
                     Message = "Created",
-                    Result = await _I.Insert(entity)
+                    Result = await _i.Insert(entity)
                 });
             }
-            catch
+            catch (Exception ex) 
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
         }
         [HttpPut("{id}")]
@@ -45,10 +44,10 @@ namespace Backend_WebLaptop.Controllers
             try
             {
                 entity.Id = id;
-                var IsSuccess = await _I.Update(entity);
-                return StatusCode(200, new ResponseAPI<string>
+                var isSuccess = await _i.Update(entity);
+                return StatusCode(200, new ResponseApi<string>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch
@@ -62,10 +61,10 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                var IsSuccess = await _I.DeletebyId(id);
-                return StatusCode(200, new ResponseAPI<string>
+                var isSuccess = await _i.DeletebyId(id);
+                return StatusCode(200, new ResponseApi<string>
                 {
-                    Message = IsSuccess ? "Success" : "Failed"
+                    Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
             catch

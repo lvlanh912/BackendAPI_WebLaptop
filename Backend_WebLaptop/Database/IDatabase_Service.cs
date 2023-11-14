@@ -3,7 +3,7 @@ using MongoDB.Driver;
 
 namespace Backend_WebLaptop.Database
 {
-    public interface IDatabase_Service
+    public interface IDatabaseService
     {
         IMongoCollection<Account> Get_Accounts_Collection();
         IMongoCollection<Province> Get_Provinces_Collection();
