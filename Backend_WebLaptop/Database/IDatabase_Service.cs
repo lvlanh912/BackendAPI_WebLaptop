@@ -17,6 +17,7 @@ namespace Backend_WebLaptop.Database
         IMongoCollection<Voucher> Get_Vouchers_Collection();
         IMongoCollection<Order> Get_Orders_Collection();
         IMongoCollection<Payment> Get_Payments_Collections();
+        IMongoCollection<News> Get_News_Collections();
 
     }
 }

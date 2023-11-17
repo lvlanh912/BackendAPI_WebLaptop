@@ -46,7 +46,7 @@ namespace Backend_WebLaptop.Respository
                 throw new Exception("This record does not exits");
             }
             entity.Name ??= curent.Name;
-            entity.Description = String.IsNullOrWhiteSpace(entity.Description) ? curent.Description : entity.Description;
+            entity.Active ??= curent.Active;
             var rs = await _payments.FindOneAndReplaceAsync(x => x.Id == entity.Id, entity);
             return rs != null;
         }

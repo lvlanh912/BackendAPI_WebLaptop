@@ -29,6 +29,7 @@ builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
 //builder.Services.AddScoped<IStatusOrderingRepository, StatusOrderingRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<INewRepository, NewsRepository>();
 
 
 

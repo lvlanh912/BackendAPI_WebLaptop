@@ -38,6 +38,24 @@ namespace Backend_WebLaptop.Respository
             return await Upload_image(entity.Images[0], entity.Data!.Id!, path);
         }
 
+        public async Task<List<string>> UploadPost_Image(ImageUpload<News> entity)//multi images
+        {
+            var listName = new List<string>();
+            string path = "posts";
+            if (entity.Images == null)
+                throw new Exception("Cannot upload null image");
+            else
+            {
+                for (int i = 0; i < entity.Images.Count; i++)
+                {
+                    if (!IsImage(entity.Images[i]))
+                        throw new Exception("This is not Images");
+                    listName.Add(await Upload_image(entity.Images[i], "posts" + entity.Data!.Id + $"-{i}", path));
+                }
+            }
+            return listName;
+        }
+
         public async Task<string> Upload_image(IFormFile image, string filename, string path)
         {
             string fullfilename = filename + Path.GetExtension(image.FileName);
@@ -66,11 +84,16 @@ namespace Backend_WebLaptop.Respository
                 case 2://xoá ảnh sản phẩm
                     path = path + "products\\" + namefile;
                     break;
+                case 3://xoá ảnh tin đăng
+                    path = path + "post\\" + namefile;
+                    break;
                 default:
                     throw new Exception("No type selected");
             }
            if( File.Exists(path))//kiểm tra file tồn tại hay không
              await Task.Run(() =>  new FileInfo(path).Delete());
         }
+
+      
     }
 }

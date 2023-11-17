@@ -20,11 +20,11 @@ namespace Backend_WebLaptop.Database
         private readonly IMongoCollection<Voucher> _vouchers;
         private readonly IMongoCollection<Order> _orders;
         private readonly IMongoCollection<Payment> _payments;
+        private readonly IMongoCollection<News> _news;
         public DatabaseService(IOptions<DatabaseConfig> databaseconfig)
         {
             var mongoClient = new MongoClient(databaseconfig.Value.ConnectionString);
             var mongoDatabase = mongoClient.GetDatabase(databaseconfig.Value.DatabaseName);
-            var a = databaseconfig.Value.AccountsCollections;
             _accounts = mongoDatabase.GetCollection<Account>(databaseconfig.Value.AccountsCollections);
             _provinces = mongoDatabase.GetCollection<Province>(databaseconfig.Value.ProvincesCollections);
             _districts = mongoDatabase.GetCollection<District>(databaseconfig.Value.DistrictsCollections);
@@ -37,6 +37,7 @@ namespace Backend_WebLaptop.Database
             _vouchers = mongoDatabase.GetCollection<Voucher>(databaseconfig.Value.VouchersCollections);
             _orders = mongoDatabase.GetCollection<Order>(databaseconfig.Value.OrdersCollections);
             _payments = mongoDatabase.GetCollection<Payment>(databaseconfig.Value.PaymentsCollections);
+            _news= mongoDatabase.GetCollection<News>(databaseconfig.Value.NewsCollections);
         }
 
         public IMongoCollection<Account> Get_Accounts_Collection() => _accounts;
@@ -51,6 +52,7 @@ namespace Backend_WebLaptop.Database
         public IMongoCollection<Voucher> Get_Vouchers_Collection() => _vouchers;
         public IMongoCollection<Payment> Get_Payments_Collections() => _payments;
         public IMongoCollection<Order> Get_Orders_Collection() => _orders;
+        public IMongoCollection<News> Get_News_Collections() => _news;
 
     }
 }

@@ -16,6 +16,8 @@ namespace Backend_WebLaptop.Respository
         public async Task<Voucher> CreateVoucher(Voucher entity)
         {
             entity.CreateAt = DateTime.Now;
+            if (entity.IsValue)
+                entity.MaxReduce = entity.Value;
             if (!Validate(entity))
                 throw new Exception("Invalid data");
             entity.Code = entity.Code!.ToUpper().Replace(" ", String.Empty);
@@ -28,13 +30,13 @@ namespace Backend_WebLaptop.Respository
             return entity;
         }
 
-        public async Task<PagingResult<Voucher>> GetAllVouchers(string? keywords, DateTime? createTimeStart, DateTime? createTimeEnd, bool? Active, int pageSize, int pageindex, string sort)
+        public async Task<PagingResult<Voucher>> GetAllVouchers(string? keywords, DateTime? createTimeStart, DateTime? createTimeEnd, bool? active, int pageSize, int pageindex, string sort)
         {
             //filter
             var result = string.IsNullOrWhiteSpace(keywords) ? await _vouchers.FindSync(e => true).ToListAsync() :
                 await _vouchers.FindSync(e => e.Code!.Contains(keywords.Trim().ToUpper())).ToListAsync();
-            if (Active != null)
-                result = result.FindAll(e => e.Active == Active);
+            if (active != null)
+                result = result.FindAll(e => e.Active == active);
             if (createTimeStart != null)
                 result = result.FindAll(e => e.CreateAt >= createTimeStart);
             if (createTimeEnd != null)
@@ -44,15 +46,17 @@ namespace Backend_WebLaptop.Respository
             {
                 "startdate_desc" => result.OrderByDescending(e => e.StartAt).ToList(),
                 "startdate" => result.OrderBy(e => e.StartAt).ToList(),
-                "enddate_desc" => result.OrderBy(e => e.EndAt).ToList(),
-                "enddate" => result.OrderByDescending(e => e.EndAt).ToList(),
+                "enddate_desc" => result.OrderByDescending(e => e.EndAt).ToList(),
+                "enddate" => result.OrderBy(e => e.EndAt).ToList(),
+                "create_desc" => result.OrderByDescending(e => e.CreateAt).ToList(),
                 _ => result.OrderBy(e => e.CreateAt).ToList(),
             };
             return new PagingResult<Voucher>
             {
-                Items = result,
+                Items = result.Skip((pageindex-1)*pageSize).Take(pageSize),
                 PageIndex = pageindex,
-                PageSize = pageSize
+                PageSize = pageSize,
+                TotalCount=result.Count
             };
         }
 
@@ -70,9 +74,7 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<Voucher> EditVoucher(Voucher entity, string voucherId)
         {
-            var curent = await _vouchers.FindSync(e => e.Id == voucherId).FirstOrDefaultAsync();
-            if (curent == null)
-                throw new Exception("This voucher does not exits");
+            var curent = await _vouchers.FindSync(e => e.Id == voucherId).FirstOrDefaultAsync() ?? throw new Exception("This voucher does not exits");
             entity.Id = voucherId;
             entity.CreateAt = curent.CreateAt;
             entity.Code = entity.Code != null ? entity.Code.ToUpper().Replace(" ", String.Empty) : curent.Code;
@@ -107,7 +109,7 @@ namespace Backend_WebLaptop.Respository
                 string.IsNullOrWhiteSpace(entity.Code),
                 entity.MinApply==null||entity.MinApply<0,
                 entity.Value<=0,
-                 entity.MaxReduce<=0,
+                entity.MaxReduce<=0,
                 entity.Quantity==null||entity.Quantity<=0,
                 entity.StartAt==null,
                 entity.EndAt==null,

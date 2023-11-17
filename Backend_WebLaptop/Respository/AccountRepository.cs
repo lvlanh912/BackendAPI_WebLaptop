@@ -39,13 +39,13 @@ namespace Backend_WebLaptop.Respository
             else
                 accounts = await _accounts.Find(_ => true).ToListAsync();
             if (startdate != null)
-                accounts = accounts.Where(e => e.CreateAt >= startdate).ToList();
+                accounts = accounts.FindAll(e => e.CreateAt >= startdate).ToList();
             if (enddate != null)
-                accounts = accounts.Where(e => e.CreateAt <= enddate).ToList();
+                accounts = accounts.FindAll(e => e.CreateAt <= enddate).ToList();
             if (role != null)
-                accounts = accounts.Where(e => e.Role == role).ToList();
+                accounts = accounts.FindAll(e => e.Role == role).ToList();
             if (gender != null)
-                accounts = accounts.Where(e => e.Sex == gender).ToList();
+                accounts = accounts.FindAll(e => e.Sex == gender).ToList();
 
             //sort
             result.Items = sort switch
@@ -55,6 +55,7 @@ namespace Backend_WebLaptop.Respository
                 "username_desc" => accounts.OrderByDescending(e => e.Username),
                 _ => accounts.OrderBy(e => e.CreateAt),
             };
+            //pagging
             result.TotalCount = accounts.Count;
             result.Items = result.Items.Skip((pageindex - 1) * pagesize);
             result.Items = result.Items.Take(pagesize);

@@ -18,6 +18,7 @@
         public string? StatusOrderCollections { get; set; }
         public string? VouchersCollections { get; set; }
         public string? StatusOrderingsCollections { get; set; }
+        public string? NewsCollections { get; set; }
 
     }
 }

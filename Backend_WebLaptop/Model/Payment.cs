@@ -9,7 +9,6 @@ namespace Backend_WebLaptop.Model
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
         public string? Name { get; set; }
-        public string? Description { get; set; }
-        public bool IsActive { get; set; } = true;
+        public bool? Active { get; set; } = true;
     }
 }

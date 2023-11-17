@@ -14,20 +14,20 @@ namespace Backend_WebLaptop.Controllers
             _i = i;
         }
         [HttpGet]
-        public async Task<ActionResult> Getall(string? keywords,DateTime? createTimeStart, DateTime? createTimeEnd, bool? disable, string? sort, int pageindex = 1, int pagesize = 10)
+        public async Task<ActionResult> Getall(string? keywords,DateTime? createTimeStart, DateTime? createTimeEnd, bool? active, string? sort, int pageindex = 1, int pagesize = 10)
         {
             try
             {
                 return StatusCode(200, new ResponseApi<PagingResult<Voucher>>
                 {
                     Message = "Success",
-                    Result = await _i.GetAllVouchers(keywords, createTimeStart, createTimeEnd, disable, pagesize, pageindex,sort??"create" )
+                    Result = await _i.GetAllVouchers(keywords, createTimeStart, createTimeEnd, active, pagesize, pageindex,sort??"create" )
                 });
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<string> { Message=ex.Message});
             }
         }
 
