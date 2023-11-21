@@ -50,7 +50,7 @@ namespace Backend_WebLaptop.Respository
                 {
                     if (!IsImage(entity.Images[i]))
                         throw new Exception("This is not Images");
-                    listName.Add(await Upload_image(entity.Images[i], "posts" + entity.Data!.Id + $"-{i}", path));
+                    listName.Add(await Upload_image(entity.Images[i],entity.Data!.Id + $"-{i}", path));
                 }
             }
             return listName;
@@ -85,7 +85,7 @@ namespace Backend_WebLaptop.Respository
                     path = path + "products\\" + namefile;
                     break;
                 case 3://xoá ảnh tin đăng
-                    path = path + "post\\" + namefile;
+                    path = path + "posts\\" + namefile;
                     break;
                 default:
                     throw new Exception("No type selected");

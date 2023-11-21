@@ -14,13 +14,39 @@ namespace Backend_WebLaptop.Controllers
             _i = i;
         }
         [HttpGet]
-        public async Task<ActionResult> GetList_Category()
+        public async Task<ActionResult> GetList_Category(string? keywords, string? sort, int pageindex = 1, int pagesize = 25)
         {
-            return StatusCode(200, new ResponseApi<List<Category>>
+            return StatusCode(200, new ResponseApi<PagingResult<Category>>
             {
                 Message = "Success",
-                Result = await _i.GetAll()
+                Result = await _i.GetAll(null,keywords,sort??"name",pageindex,pagesize)
             });
+        }
+        [HttpGet("{ParentCategoryId}")]
+        public async Task<ActionResult> GetListChildsById(string ParentCategoryId, string? keywords, string? sort, int pageindex = 1, int pagesize = 25)
+        {
+            return StatusCode(200, new ResponseApi<PagingResult<Category>>
+            {
+                Message = "Success",
+                Result = await _i.GetAll(ParentCategoryId, keywords, sort ?? "name", pageindex, pagesize)
+            });
+        }
+        [HttpGet("getbyId")]
+        public async Task<ActionResult> GetbyId(string id)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<Category>
+                {
+                    Message = "Success",
+                    Result = await _i.GetbyId(id)
+                });
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(new ResponseApi<string> { Message = ex.Message });
+            }
+           
         }
         [HttpPost]
         public async Task<ActionResult> Insert_new(Category entity)
@@ -50,14 +76,14 @@ namespace Backend_WebLaptop.Controllers
                     Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
-            catch
+            catch(Exception ex)
             {
                 // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<string> { Message=ex.Message,Result= "Failed" });
             }
         }
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(string id)
+        public async Task<ActionResult> Delete(string id,string type=)
         {
             try
             {

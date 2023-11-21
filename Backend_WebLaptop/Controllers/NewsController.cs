@@ -14,6 +14,24 @@ namespace Backend_WebLaptop.Controllers
         {
             _i = i;
         }
+        [HttpGet("{id}")]
+        public async Task<ActionResult> Get_Post(string id)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<News>
+                {
+                    Message = "Success",
+                    Result = await _i.GetbyId(id)
+                });
+            }
+            catch
+            {
+                return StatusCode(503, new ResponseApi<string> { Message = "Some thing went wrong ", Result = null });
+            }
+
+        }
+
         [HttpGet]
         public async Task<ActionResult> GetList_Post(string? keywords, DateTime? startdate, DateTime? enddate, string? sort, int pageindex = 1, int pagesize = 25)
         {
@@ -32,14 +50,19 @@ namespace Backend_WebLaptop.Controllers
 
         }
         [HttpPost]
-        public async Task<ActionResult> Add(ImageUpload<News> entity)
+        public async Task<ActionResult> Add([FromForm] string data, List<IFormFile>? images)
         {
             try
             {
+                var news = JsonConvert.DeserializeObject<News>(data);
                 return StatusCode(201, new ResponseApi<News>
                 {
                     Message = "Success",
-                    Result = await _i.Insert(entity)
+                    Result = await _i.Insert(new ImageUpload<News>
+                    {
+                        Data=news,
+                        Images=images
+                    })
                 });
             }
             catch (Exception ex)

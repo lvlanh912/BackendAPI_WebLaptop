@@ -1,7 +1,9 @@
 ﻿using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using SharpCompress.Common;
 using System.Linq;
 
 namespace Backend_WebLaptop.Respository
@@ -19,6 +21,9 @@ namespace Backend_WebLaptop.Respository
         public async Task<bool> DeletebyId(string id)
         {
             var rs = await _news.FindOneAndDeleteAsync(e => e.Id == id);
+            if (rs.Images != null)
+                foreach (var item in rs.Images)
+                    await _upload.Delete_Image(3, item);
             return rs != null;
         }
 
@@ -54,8 +59,9 @@ namespace Backend_WebLaptop.Respository
                 throw new Exception("Data invalid");
             if (entity.Images == null || entity.Images.Count == 0)
                 throw new Exception("Must have at least one image");
+            entity.Data.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
             //Upload ảnh
-            entity.Data.Images= await _upload.UploadPost_Image(entity);
+            entity.Data.Images = await _upload.UploadPost_Image(entity);
             await _news.InsertOneAsync(entity.Data);
             return entity.Data;
            
@@ -66,18 +72,19 @@ namespace Backend_WebLaptop.Respository
             //Validate
             if (entity.Data == null)
                 throw new Exception("Data invalid");
-            if (entity.Images == null || entity.Images.Count == 0)
-                throw new Exception("Must have at least one image");
            var curent= await GetbyId(entity.Data!.Id!) ?? throw new Exception("This record does not exits");
             if (entity.Images != null && entity.Images.Count > 0)
             {
-               //xoá ảnh cũ 
-               if(entity.Data.Images!=null)
-                foreach(var item in entity.Data.Images)
+                //xoá ảnh cũ 
+                if (entity.Data.Images != null)
+                    foreach (var item in entity.Data.Images)
                         await _upload.Delete_Image(3, item);
-               //Upload ảnh mới
+                //Upload ảnh mới
                 entity.Data.Images = await _upload.UploadPost_Image(entity);
             }
+            else
+                entity.Data.Images = curent.Images;
+            entity.Data.CreateAt = curent.CreateAt;
            var result= await _news.FindOneAndReplaceAsync(e=>e.Id==entity.Data.Id, entity.Data);
             return result;
         }

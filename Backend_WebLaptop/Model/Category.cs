@@ -11,8 +11,9 @@ namespace Backend_WebLaptop.Model
         [BsonElement("Name_Category")]
         public string? Name { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? ParentId { get; set; }
+        public string? ParentCategoryId { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
-        public List<string> Childs { get; set; }= new List<string>();
+        [BsonElement("ChildCategory")]
+        public List<string> Childs { get; set; } = new List<string>();
     }
 }
