@@ -3,20 +3,45 @@ using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using SharpCompress.Common;
 
 namespace Backend_WebLaptop.Respository
 {
     public class CategoryRepository : ICategoryRepository
     {
         private readonly IMongoCollection<Category>? _categories;
+        private readonly IMongoCollection<Product>? _products;
 
         public CategoryRepository(IDatabaseService databaseService)
         {
             _categories = databaseService.Get_Categories_Collection();
+            _products = databaseService.Get_Products_Collection();
         }
 
         public async Task<bool> DeletebyId(string id)
         {
+            var current = await GetbyId(id) ?? throw new Exception("Category is does not exits");
+            //xoá trong childs của category cha (nếu có)
+            if (current.ParentCategoryId != null)
+            {
+                var parentCat = await GetbyId(current.ParentCategoryId);
+                parentCat.Childs.Remove(current.Id!);
+                var update = Builders<Category>.Update.Set(e => e.Childs, parentCat.Childs);
+                _categories.UpdateOne(e => e.Id == parentCat.Id, update);
+            }
+            //thay đổi cat con thành danh mục gốc (nếu có cat con)
+            if (current.Childs.Count > 0)
+            {
+                var updateTasks = current.Childs.Select(item =>
+                {
+                    var update = Builders<Category>.Update.Set(e => e.ParentCategoryId, null);
+                    return _categories.UpdateOneAsync(e => e.Id == item, update);
+                });
+               await Task.WhenAll(updateTasks);
+            }
+            //Xoá category ra khỏi các sản phẩm 
+            var update_Products = Builders<Product>.Update.Pull(e => e.Categories, id);
+            await _products.UpdateManyAsync(e => e.Categories!.Count>0&& e.Categories.Contains(id), update_Products);
             var rs = await _categories.DeleteOneAsync(e => e.Id == id);
             return rs.DeletedCount != 0;
         }
@@ -35,7 +60,7 @@ namespace Backend_WebLaptop.Respository
             var result = new List<Category>();
             //lấy danh sách tất cả danh mục gốc (không có danh mục cha)
             if(ParentCategoryId == null)
-                 result=keywords!=null? await _categories.FindSync( e => e.Name!.Contains(keywords)&&e.ParentCategoryId==null).ToListAsync(): await _categories.FindSync(e => e.ParentCategoryId == null).ToListAsync();
+                 result=keywords!=null? await _categories.FindSync( e => e.Name.ToLower().Contains(keywords.ToLower())&&e.ParentCategoryId==null).ToListAsync(): await _categories.FindSync(e => e.ParentCategoryId == null).ToListAsync();
             else
                 //lấy danh sách các danh mục con 
                 result = keywords != null ? await _categories.FindSync(e =>e.ParentCategoryId== ParentCategoryId && e.Name!.Contains(keywords)).ToListAsync() : await _categories.FindSync(e => e.ParentCategoryId == ParentCategoryId).ToListAsync();
@@ -46,7 +71,7 @@ namespace Backend_WebLaptop.Respository
                 result = result.OrderBy(e => e.Name).ToList();
             return new PagingResult<Category>
             {
-                Items = result,
+                Items = result.Skip((pageindex - 1) * pagesize).Take(pagesize),
                 PageSize = pagesize,
                 PageIndex = pageindex,
                 TotalCount = result.Count
@@ -125,5 +150,7 @@ namespace Backend_WebLaptop.Respository
             }
             return true;
         }
+
+        public async Task<List<Category>> GetAllCategorybyName(string name)=> await _categories.FindSync(e => e.Name!.ToLower().Contains(name.ToLower())).ToListAsync();
     }
 }

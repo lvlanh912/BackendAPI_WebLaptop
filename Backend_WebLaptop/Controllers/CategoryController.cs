@@ -22,6 +22,15 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _i.GetAll(null,keywords,sort??"name",pageindex,pagesize)
             });
         }
+        [HttpGet("getbyname")]
+        public async Task<ActionResult> FindCategorybyName(string name)
+        {
+            return StatusCode(200, new ResponseApi<List<Category>>
+            {
+                Message = "Success",
+                Result = await _i.GetAllCategorybyName(name)
+            });
+        }
         [HttpGet("{ParentCategoryId}")]
         public async Task<ActionResult> GetListChildsById(string ParentCategoryId, string? keywords, string? sort, int pageindex = 1, int pagesize = 25)
         {
@@ -83,7 +92,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(string id,string type=)
+        public async Task<ActionResult> Delete(string id)
         {
             try
             {

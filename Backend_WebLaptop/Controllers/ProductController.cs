@@ -15,27 +15,22 @@ namespace Backend_WebLaptop.Controllers
             _i = i;
         }
         [HttpGet]
-        public async Task<ActionResult> Get_Products(int? pageindex, int? size, string? keywords, string? brand,
-            string? category, int? min, int? max)
+        public async Task<ActionResult> Get_Products( string? keywords, string? brand,string? category, int? min, int? max, string? sort, int pageindex=1, int Pagesize=25)
         {
             try
             {
                 return StatusCode(200, new ResponseApi<PagingResult<Product>>
                 {
                     Message = "Success",
-                    Result = await _i.GetAll(new ProductFilter
-                    {
-                        Brand = brand,
-                        Keywords = keywords,
-                        Category = category,
-                        MinPrice = min,
-                        MaxPrice = max
-                    }, pageindex ?? 1, size ?? 10)
+                    Result = await _i.GetAll( keywords,  brand,category,  min,  max, sort??"date",  pageindex, Pagesize )
                 });
             }
-            catch
+            catch(Exception ex)
             {
-                return BadRequest();
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                }); 
             }
         }
         [HttpGet("id")]
@@ -59,7 +54,7 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                return StatusCode(201, new ResponseApi<bool>
+                return StatusCode(201, new ResponseApi<Product>
                 {
                     Message = "Created",
                     Result = await _i.Insert(new ImageUpload<Product>
@@ -71,7 +66,11 @@ namespace Backend_WebLaptop.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                });
+                
             }
         }
         [HttpPut("{id}")]
@@ -80,16 +79,19 @@ namespace Backend_WebLaptop.Controllers
             try
             {
                 entity.Id = id;
-                var isSuccess = await _i.Update(entity);
-                return StatusCode(200, new ResponseApi<string>
+                return StatusCode(200, new ResponseApi<Product>
                 {
-                    Message = isSuccess ? "Success" : "Failed"
-                }.Format());
+                    Message = "Success" ,
+                    Result = await _i.Update(entity)
+            });
             }
-            catch
+            catch(Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message=ex.Message,
+                    Result="Failed"
+                });
             }
         }
         [HttpDelete("{id}")]

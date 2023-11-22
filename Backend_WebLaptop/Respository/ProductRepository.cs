@@ -48,18 +48,50 @@ namespace Backend_WebLaptop.Respository
             return rs != null;
         }
 
-        public async Task<PagingResult<Product>> GetAll(ProductFilter? filter, int pageindex, int pagesize)
+        public async Task<PagingResult<Product>> GetAll(string? keywords, string? brand, string? category, int? min, int? max, string sort, int pageindex, int Pagesize)
         {
+        //fillter
+            //từ khoá
+           var result = keywords != null ? await _products.FindSync(e => e.ProductName!.ToLower()!.Contains(keywords.ToLower())).ToListAsync() : await _products.FindSync(e => true).ToListAsync();
+            //danh mục -> sản phẩm có trong danh mục đó
+            if (category!=null)
+                result = result.FindAll(e => e.Categories.Contains(category));
+            //hãng
+            if (brand != null)
+                result = result.FindAll(e => e.BrandName.ToLower().Contains(brand.ToLower()));
+            //giá tối thiểu
+            if (min != null)
+                result = result.FindAll(e => e.Price >= min);
+            //giá tối đa
+            if (max != null)
+                result = result.FindAll(e => e.Price <= max);
+            //sort
+            result = sort switch
+            {
+                "date_desc" => result.OrderByDescending(e => e.CreateAt).ToList(),
+                "price" => result.OrderBy(e => e.Price).ToList(),
+                "price_desc" => result.OrderByDescending(e => e.Price).ToList(),
+                "stock_desc" => result.OrderBy(e => e.Stock).ToList(),
+                "stock" => result.OrderByDescending(e => e.Stock).ToList(),
+                "sold_desc" => result.OrderByDescending(e => e.Sold).ToList(),
+                "sold" => result.OrderBy(e => e.Sold).ToList(),
+                "view_desc" => result.OrderByDescending(e => e.View).ToList(),
+                "view" => result.OrderBy(e => e.View).ToList(),
+                _ => result.OrderBy(e => e.CreateAt).ToList()
+            };
             return new PagingResult<Product>
             {
-                Items = await GetProducts(filter!),
+                Items = result.Skip((pageindex - 1) * Pagesize).Take(Pagesize),
                 PageIndex = pageindex,
-                PageSize = pagesize
+                PageSize = Pagesize,
+                TotalCount = result.Count
             };
+           
+            
         }
         public async Task<Product> GetbyId(string id) => await _products.FindSync(e => e.Id == id).FirstOrDefaultAsync();
 
-        public async Task<bool> Insert(ImageUpload<Product> entity)
+        public async Task<Product> Insert(ImageUpload<Product> entity)
         {
             entity.Data!.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
             if (entity.Images == null)
@@ -71,12 +103,12 @@ namespace Backend_WebLaptop.Respository
             if (await ValidateData(entity.Data))
             {
                 await _products.InsertOneAsync(entity.Data);
-                return true;
+                return entity.Data;
             }
-            return false;
+            throw new Exception("Data invalid");
         }
 
-        public async Task<bool> Update(Product entity)
+        public async Task<Product> Update(Product entity)
         {
             var curent = await _products.FindSync(e => entity.Id == entity.Id).FirstOrDefaultAsync();
             entity.CreateAt = curent.CreateAt;
@@ -84,52 +116,14 @@ namespace Backend_WebLaptop.Respository
             entity.Price = (entity.Price <= 1000 ? curent.Price : entity.Price);
             entity.MaxPrice = (entity.MaxPrice <= 1000 ? curent.MaxPrice : entity.MaxPrice);
             entity.View = (entity.View <= 0 ? curent.View : entity.View);
-            entity.CategoryId = (entity.CategoryId == null || entity.CategoryId.Count == 0) ? curent.CategoryId : entity.CategoryId;
+            entity.Categories = (entity.Categories == null || entity.Categories.Count == 0) ? curent.Categories : entity.Categories;
             entity.Stock = entity.Stock <= 0 ? curent.Stock : entity.Stock;
             entity.Weight = entity.Weight <= 0 ? curent.Weight : entity.Weight;
             entity.BrandName = String.IsNullOrWhiteSpace(entity.BrandName) ? curent.BrandName : entity.BrandName;
             entity.Special = (entity.Special == null || entity.Special.Count == 0) ? curent.Special : entity.Special;
             if (await ValidateData(entity))
-            {
-                var rs = await _products.ReplaceOneAsync(e => e.Id == entity.Id, entity);
-                return rs.ModifiedCount > 0;
-            }
-            return false;
-        }
-        private async Task<IEnumerable<Product>> GetProducts(ProductFilter filter)
-        {
-            var rs = Enumerable.Empty<Product>();
-            //nếu có từ khoá và 1 danh mục ->lọc sản phẩm có từ khoá trong danh mục đấy
-            if (!string.IsNullOrEmpty(filter.Keywords) && !string.IsNullOrEmpty(filter.Category))
-            {
-                var data = await _products.FindAsync(e => e.CategoryId!.Contains(filter.Category) &&
-                e.ProductName!.Trim().ToLower().Contains(filter.Keywords));
-                rs = data.ToEnumerable<Product>();
-            }
-            //nếu chỉ có danh mục ->sản phẩm có trong danh mục đó
-            if (string.IsNullOrEmpty(filter.Keywords) && !string.IsNullOrEmpty(filter.Category))
-            {
-                var data = await _products.FindAsync(e => e.CategoryId!.Contains(filter.Category));
-                rs = data.ToEnumerable<Product>();
-            }
-            //nếu có danh mục và hãng-> lọc Sản phẩm theo hãng trong danh mục đó
-            if (!string.IsNullOrEmpty(filter.Brand) && !string.IsNullOrEmpty(filter.Category))
-            {
-                var data = await _products.FindAsync(e => e.CategoryId!.Contains(filter.Category) &&
-                e.BrandName!.Trim().ToLower() == filter.Brand.Trim().ToLower());
-                rs = data.ToEnumerable<Product>();
-            }
-            //nếu chỉ có hãng-> lọc tất cả sản phẩm theo hãng đó
-            if (!string.IsNullOrEmpty(filter.Brand) && string.IsNullOrEmpty(filter.Category))
-            {
-                var data = await _products.FindAsync(e => e.BrandName!.Trim().ToLower() == filter.Brand.Trim().ToLower());
-                rs = data.ToEnumerable<Product>();
-            }
-            if (filter.MinPrice.HasValue)
-                rs = rs.Where(e => e.Price >= filter.MinPrice);
-            if (filter.MaxPrice.HasValue)
-                rs = rs.Where(e => e.Price <= filter.MaxPrice);
-            return rs;
+                return await _products.FindOneAndReplaceAsync(e => e.Id == entity.Id, entity);
+            throw new Exception("Data invalid");
         }
         private async Task<bool> ValidateData(Product entity)
         {
@@ -138,8 +132,9 @@ namespace Backend_WebLaptop.Respository
                 entity.Price>1000,
                 entity.Stock>=0,
                 entity.Weight>0,
-                entity.CategoryId!.Count>0&&  await _category.Exits(entity.CategoryId),
+                (entity.Categories.Count>0&&  await _category.Exits(entity.Categories))||entity.Categories.Count==0,
                 entity.MaxPrice>1000,
+                entity.MaxPrice>entity.Price,
                 entity.View>=0,
                 entity.Images!=null&&  entity.Images.Count>=1,
                 entity.Sold>=0,
@@ -168,5 +163,7 @@ namespace Backend_WebLaptop.Respository
             var curentProduct = await _products.FindSync(e => e.Id == id).FirstOrDefaultAsync();
             return curentProduct.Stock - quantity >= 0;
         }
+
+
     }
 }

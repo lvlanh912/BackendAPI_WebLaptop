@@ -10,13 +10,13 @@ namespace Backend_WebLaptop.Model
         public string? Id { get; set; }
         [BsonElement("Name_Product")]
         public string? ProductName { get; set; }
+        public Int32 Price { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        [BsonElement("Product_CategoriesID")]
+        public List<string> Categories { get; set; } = new List<string>();
         [BsonElement("Max_Price")]
         public Int32? MaxPrice { get; set; }
-
-        public Int32 Price { get; set; }
-
-        public DateTime CreateAt { get; set; }
-
+        public DateTime CreateAt { get; set; } = DateTime.Now;
         public List<string>? Images { get; set; }
 
         public Int32 Stock { get; set; }
@@ -26,15 +26,11 @@ namespace Backend_WebLaptop.Model
         public Int64 View { get; set; } = 1;
 
         [BsonElement("Brand_name")]
-        public string? BrandName { get; set; }
-
-        [BsonRepresentation(BsonType.ObjectId)]
-        [BsonElement("Product_CategoriesID")]
-        public List<string>? CategoryId { get; set; }
+        public string BrandName { get; set; } = string.Empty;
 
         public double? Weight { get; set; }
 
-        public List<Speacial>? Special { get; set; }
+        public List<Speacial> Special { get; set; } = new List<Speacial>();
     }
     public class Speacial
     {
