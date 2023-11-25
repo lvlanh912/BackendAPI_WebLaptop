@@ -12,8 +12,8 @@ namespace Backend_WebLaptop.Model
         [BsonElement("AccountID")]
         public string? AccountId { get; set; }
         [BsonElement("Full_name")]
-        public string? Fullname { get; set; }
-        public string? Address { get; set; }
+        public string Fullname { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
         [BsonElement("Phone_number")]
         public Int32 Phone { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]

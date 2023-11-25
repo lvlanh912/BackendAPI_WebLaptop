@@ -33,6 +33,26 @@ namespace Backend_WebLaptop.Controllers
                 }); 
             }
         }
+
+        [HttpGet("search")]
+        public async Task<ActionResult> Get_Products_keyword(string keywords)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<List<Product>>
+                {
+                    Message = "Success",
+                    Result = await _i.GetbyKeyword(keywords)
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                });
+            }
+        }
         [HttpGet("id")]
         public async Task<ActionResult> GetById(string id)
         {
@@ -74,16 +94,17 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(string id, Product entity)
+        public async Task<ActionResult> Update([FromForm]string data, List<IFormFile>? images)
         {
             try
             {
-                entity.Id = id;
+                var product = JsonConvert.DeserializeObject<Product>(data);
+                product!.Id = this.HttpContext.GetRouteValue("id")!.ToString();
                 return StatusCode(200, new ResponseApi<Product>
                 {
-                    Message = "Success" ,
-                    Result = await _i.Update(entity)
-            });
+                    Message = "Success",
+                    Result = await _i.Update(new ImageUpload<Product> { Data = product, Images = images })
+                }) ;
             }
             catch(Exception ex)
             {

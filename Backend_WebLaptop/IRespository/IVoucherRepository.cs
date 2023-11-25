@@ -14,6 +14,7 @@ namespace Backend_WebLaptop.IRespository
         Task<Voucher> EditVoucher(Voucher entity, string voucherId);
         Task<bool> DisableVoucher(string voucherId);
         Task<bool> DeleteVoucher(string voucherId);
-        Task<bool> IsValidCode(string code);
+        bool IsValidCode(Voucher entity);
+        Task Decrease(string code);
     }
 }

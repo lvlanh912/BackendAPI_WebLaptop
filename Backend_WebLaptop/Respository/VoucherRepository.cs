@@ -21,7 +21,7 @@ namespace Backend_WebLaptop.Respository
             if (!Validate(entity))
                 throw new Exception("Invalid data");
             entity.Code = entity.Code!.ToUpper().Replace(" ", String.Empty);
-            if (await IsValidCode(entity.Code))
+            if (await GetVoucherbyCode(entity.Code) !=null)
                 throw new Exception("This Voucher is already exits");
             //Nếu voucher giảm giá theo số tiền số tiền giảm sẽ bằng số tiền giảm tối đa
             if (entity.IsValue)
@@ -74,7 +74,7 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<Voucher> EditVoucher(Voucher entity, string voucherId)
         {
-            var curent = await _vouchers.FindSync(e => e.Id == voucherId).FirstOrDefaultAsync() ?? throw new Exception("This voucher does not exits");
+            var curent = await _vouchers.FindSync(e => e.Id == voucherId).FirstOrDefaultAsync() ?? throw new Exception("This voucher does not exist");
             entity.Id = voucherId;
             entity.CreateAt = curent.CreateAt;
             entity.Code = entity.Code != null ? entity.Code.ToUpper().Replace(" ", String.Empty) : curent.Code;
@@ -125,10 +125,23 @@ namespace Backend_WebLaptop.Respository
 
 
 
-        public async Task<bool> IsValidCode(string code)
+        public bool IsValidCode(Voucher entity)
         {
-            var rs = await _vouchers.FindSync(e => e.Code == code && e.Active == false).FirstOrDefaultAsync();
-            return rs != null;
+            if (entity.Quantity == 0)
+                return false;
+            if (entity.StartAt > DateTime.Now)
+                return false;
+            if (!entity.Active)
+                return false;
+            if (entity.EndAt < DateTime.Now)
+                return false;
+            return true;
+        }
+
+        public async Task Decrease(string code)
+        {
+            var update = Builders<Voucher>.Update.Inc(e => e.Quantity, -1);
+            await _vouchers.UpdateOneAsync(e => e.Code == code, update);
         }
     }
 }

@@ -5,12 +5,12 @@ namespace Backend_WebLaptop.IRespository
     public interface IOrderRepository
     {
         //tạo Order mới
-        Task<Order> CreateOrder(Order entity);
+        Task<Order> CreateOrder(Order entity,bool isAdmin);
 
         Task<Order> GetOrderbyId(string id);
 
-        Task<PagingResult<Order>> GetAllOrders(string? userId, string? keywords, string? paymentId, int pageSize,
-           int pageindex, int start, int end);
+        Task<PagingResult<Order>> GetAllOrders(string? accountid, int? status, bool? isPaid, string? paymentId,
+            int? minPaid, int? maxPaid, DateTime? startdate, DateTime? enddate, string sort, int pagesize = 25, int pageindex = 1);
 
         Task<Order> EditOrder(Order entity, string id);
 
@@ -20,6 +20,6 @@ namespace Backend_WebLaptop.IRespository
 
         Task<long> Get_toltalSell(DateTime? start, DateTime? end);
 
-        //Task<Order> Checkout(Payment entity);
+        Task<Order> Checkout(Order entity);
     }
 }

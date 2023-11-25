@@ -19,7 +19,7 @@ namespace Backend_WebLaptop.Respository
             var curentCart = await GetCart(accountId);
             UpdateDefinition<Cart> update;
             if (curentCart == null)
-                throw new Exception("Account is does not exits");
+                throw new Exception("Account is does not exist");
             //thêm sản phẩm vào giỏ hàng khi giỏ hàng chưa có sản phẩm đó
             if (!Isexits_Item(cartItem, curentCart.Items!))
                 update = Builders<Cart>.Update.Push<CartItem>(e => e.Items, cartItem);
@@ -53,7 +53,7 @@ namespace Backend_WebLaptop.Respository
         {
             var curentCart = await GetCart(userId);
             if (curentCart == null)
-                throw new Exception("Account is does not exits");
+                throw new Exception("Account is does not exist");
             //nếu giỏ hàng trống 
 
             foreach (var item in curentCart.Items)

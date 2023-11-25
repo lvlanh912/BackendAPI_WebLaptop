@@ -104,7 +104,7 @@ namespace Backend_WebLaptop.Respository
         }
         public async Task<Account> Update(ImageUpload<Account> entity)
         {
-            var curent = await GetbyId(entity.Data!.Id!) ?? throw new Exception("This record does not exits");
+            var curent = await GetbyId(entity.Data!.Id!) ?? throw new Exception("This record does not exist");
             if (Convert.ToInt32(entity.Data.Phone) > 999999999)
                 throw new Exception("Số điện thoại phải 10 chữ số");
             entity.Data.Username = curent.Username;//cannot update username

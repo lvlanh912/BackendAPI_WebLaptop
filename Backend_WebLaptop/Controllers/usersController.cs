@@ -91,7 +91,7 @@ namespace Backend_WebLaptop.Controllers
         {
             try
             {
-                string result = await _i.DeletebyId(id) == true ? "deleted" : "This item is does not exits";
+                string result = await _i.DeletebyId(id) == true ? "deleted" : "This item is does not exist";
                 return StatusCode(200, new ResponseApi<string> { Message = result }.Format());
             }
             catch

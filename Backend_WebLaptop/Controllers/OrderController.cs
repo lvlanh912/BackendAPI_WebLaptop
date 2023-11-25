@@ -15,27 +15,58 @@ namespace Backend_WebLaptop.Controllers
         }
         [HttpGet]
         //role admin
-        public async Task<ActionResult> Get(string? accountid, string? keywords, string? paymentId, int pagesize = 10, int pageindex = 1, int start = 30, int end = 0)
+        public async Task<ActionResult> Get(string? accountid, int? status,bool? isPaid, string? paymentId,
+            int? minPaid, int? maxPaid,DateTime? startdate, DateTime? enddate, string? sort, int pagesize = 25, int pageindex = 1 )
         {
             return StatusCode(200, new ResponseApi<PagingResult<Order>>
             {
                 Message = "Success",
-                Result = await _i.GetAllOrders(accountid, keywords, paymentId, pagesize, pageindex, start, end)
+                Result = await _i.GetAllOrders(accountid, status, isPaid, paymentId, minPaid, maxPaid, startdate, enddate,sort??"date", pagesize, pageindex)
             });
         }
-        //role admin
-        [HttpPost("add")]
+        //role admin or role user
+        [HttpPost("create")]
         public async Task<ActionResult> Insert_new(Order entity)
         {
             try
             {
-                var a = await _i.CreateOrder(entity);
-                return StatusCode(200, a);
+                //gán entity.id=token request
+                return StatusCode(201, new ResponseApi<Order>
+                {
+                    //mặc định admin (chưa sửa)
+                    Result =await _i.CreateOrder(entity,true),
+                    Message = "Đặt hàng thành công"
+
+                }) ;
             }
             catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest(ex.Message);
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                });
+            }
+        }
+        //role admin or role user
+        [HttpPost("checkin")]
+        public async Task<ActionResult> Checkin(Order entity)
+        {
+            try
+            {
+                //gán entity.id=token request
+                return StatusCode(201, new ResponseApi<string>
+                {
+                    Result ="",
+                    Message = "Success"
+
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                });
             }
         }
         [HttpDelete("{id}")]
@@ -54,6 +85,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpPut("{id}")]
+        //role Admin
         public async Task<ActionResult> Edit(Order entity, string id)
         {
             try

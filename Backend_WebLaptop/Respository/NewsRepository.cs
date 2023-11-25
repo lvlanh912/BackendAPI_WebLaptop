@@ -72,7 +72,7 @@ namespace Backend_WebLaptop.Respository
             //Validate
             if (entity.Data == null)
                 throw new Exception("Data invalid");
-           var curent= await GetbyId(entity.Data!.Id!) ?? throw new Exception("This record does not exits");
+           var curent= await GetbyId(entity.Data!.Id!) ?? throw new Exception("This record does not exist");
             if (entity.Images != null && entity.Images.Count > 0)
             {
                 //xoá ảnh cũ 

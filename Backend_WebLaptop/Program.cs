@@ -1,4 +1,4 @@
-
+﻿
 using Backend_WebLaptop.Configs;
 using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
@@ -17,6 +17,7 @@ builder.Services.Configure<DatabaseConfig>(
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IShippingAddressRepository, ShippingAddressRepository>();
@@ -27,7 +28,7 @@ builder.Services.AddScoped<IUploadImageRepository, UploadImageRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
 //builder.Services.AddScoped<IStatusOrderingRepository, StatusOrderingRepository>();
-builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<INewRepository, NewsRepository>();
 

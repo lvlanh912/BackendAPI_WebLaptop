@@ -15,7 +15,7 @@ namespace Backend_WebLaptop.Model
         public bool IsValue { get; set; }
         public int MaxReduce { get; set; }
         [BsonRepresentation(BsonType.ObjectId)]
-        public List<string>? Products { get; set; }
+        public List<string> Products { get; set; } = new List<string>();
         public int? Quantity { get; set; }
         public DateTime? CreateAt { get; set; }
         public DateTime? StartAt { get; set; }

@@ -20,7 +20,7 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<bool> DeletebyId(string id)
         {
-            var current = await GetbyId(id) ?? throw new Exception("Category is does not exits");
+            var current = await GetbyId(id) ?? throw new Exception("Category is does not exist");
             //xoá trong childs của category cha (nếu có)
             if (current.ParentCategoryId != null)
             {
@@ -104,7 +104,7 @@ namespace Backend_WebLaptop.Respository
             
             if (entity.ParentCategoryId!=null&& !await Exits(entity.ParentCategoryId))
                 throw new Exception("ParentCategoryId not exits");
-            var curent = await GetbyId(entity.Id!) ?? throw new Exception("This record does not exits");
+            var curent = await GetbyId(entity.Id!) ?? throw new Exception("This record does not exist");
             entity.Name ??= curent.Name;
             entity.Childs ??= curent.Childs;
             var rs = await _categories.FindOneAndReplaceAsync(x => x.Id == entity.Id, entity);

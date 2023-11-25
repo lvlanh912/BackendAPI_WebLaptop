@@ -1,7 +1,9 @@
 ﻿using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace Backend_WebLaptop.Respository
 {
@@ -27,72 +29,80 @@ namespace Backend_WebLaptop.Respository
 
         }
 
-        /* public async Task<Order> Checkout(Order entity)
-         {
-             //nếu có voucher
-             if (!string.IsNullOrWhiteSpace(entity.VoucherCode))
-                 entity.Total = await DecreaseByVoucher(entity.Total, entity.VoucherCode);
-             //kiểm tra số lượng sản phẩm xem có thể bán hay không
-             if (await _products.Cansell(entity.Items!))
-             return entity;
-         }*/
-
-        public async Task<PagingResult<Order>> GetAllOrders(string? userId, string? keywords, string? paymentId, int pageSize, int pageindex, int start, int end)
+        public async Task<Order> Checkout(Order entity)
         {
-            var startdate = DateTime.Now.AddDays(-start);
-            var enddate = DateTime.Now.AddDays(-end);
+            throw new Exception("");
+        }
+
+        public async Task<PagingResult<Order>> GetAllOrders(string? accountid, int? status,
+            bool? isPaid, string? paymentId, int? minPaid, int? maxPaid, DateTime? startdate, DateTime? enddate,
+            string sort, int pagesize = 25, int pageindex = 1)
+        {
+            //Fillter
             var filter = Builders<Order>.Filter;
             var builderFilter = filter.Empty;
-
+            var project = Builders<Order>.Projection.Slice("Status", -1);
             //&= là toán tử and
-            if (userId != null)
-                builderFilter &= filter.Eq(e => e.AccountId, userId);
-            if (paymentId != null)
-                builderFilter &= filter.Eq(e => e.PaymentMethodId, paymentId);
-            if (keywords != null)
-                builderFilter &= filter.Where(e => e.Status!.Last().Description!.Contains(keywords));
+            if (accountid != null)
+                builderFilter &= filter.Eq(e => e.AccountId, accountid);
+            if (isPaid != null)
+                builderFilter &= filter.Eq(e => e.IsPaid, isPaid);
+            if(startdate!=null)
+                builderFilter &= filter.Gte(e => e.CreateAt, startdate);
+            if(enddate!=null)
+                builderFilter &= filter.Gte(e => e.CreateAt, startdate);
+            if (status != null)
+                builderFilter &= filter.Eq(e => e.Status!.Code,status );
+            var orders = await _orders.FindSync(builderFilter).ToListAsync();
+            if (minPaid != null)
+                orders = orders.FindAll(e => e.Total >= minPaid).ToList();
+            if (maxPaid != null)
+                orders = orders.FindAll(e => e.Total >= maxPaid).ToList();
+            //Sort
+            orders = sort switch
+            {
+                "date_desc" => orders.OrderByDescending(e => e.CreateAt).ToList(),
+                "ispaid" => orders.OrderBy(e => e.IsPaid).ToList(),
+                "ispaid_desc" =>    orders.OrderByDescending(e => e.IsPaid).ToList(),
+                "total"=> orders.OrderBy(e => e.Total).ToList(),
+                "total_desc" => orders.OrderByDescending(e => e.Total).ToList(),
+                _ => orders.OrderBy(e=>e.CreateAt).ToList(),
+               
 
-            builderFilter &= filter.And(filter.Gte(e => e.CreateAt, startdate), filter.Lte(e => e.CreateAt, enddate));
-
-            var orders = await _orders.FindAsync(builderFilter);
-
-            var list = await orders.ToListAsync();
-
+            } ;
             return new PagingResult<Order>
             {
-                Items = list,
+                Items = orders.Skip((pageindex - 1) * pagesize).Take(pagesize),
                 PageIndex = pageindex,
-                PageSize = pageSize
+                PageSize = pagesize,
+                TotalCount = orders.Count
             };
         }
 
 
-        public async Task<Order> CreateOrder(Order entity)
+        public async Task<Order> CreateOrder(Order entity,bool isAdmin)
         {
-            var shipping = new List<Shipping>{
-                    new Shipping{Description="Đã tạo đơn hàng",UpdateAt=DateTime.Now}
-                };
-            entity.ShippingAddress = await _shippingaddress.GetbyId(entity.ShippingAddress!.Id!);
-            if (await Validate(entity))
+            //thêm trạng thái đơn hàng
+            var Order = await Validate(entity, isAdmin);
             {
-                entity.Total = await Gettoltal(entity.Items!);
-                entity.CreateAt = DateTime.Now;
-                if (entity.PaymentMethodId != null)
-                    shipping.Add(new Shipping { Description = "Đang chờ thanh toán", UpdateAt = DateTime.Now });
-                entity.Status = shipping;
-                entity.Paid = 0;
-
-                //trường hợp có voucher
-                if (entity.VoucherCode != null)
-                    entity.Total = await DecreaseByVoucher(entity.Total, entity.VoucherCode);
-                //kiểm tra số lượng sản phẩm và giảm số lượng sản phẩm và tăng số lượng bán.
-                var t1 = _products.DecreaseQuantity(entity.Items!);
-                var t2 = _orders.InsertOneAsync(entity);
-                await Task.WhenAll(t1, t2);
+                Order.Total = await Gettoltal(entity.Items);
+                Order.CreateAt = DateTime.Now;
+                //Có voucher
+                Order.Paid = Order.Voucher != null ? await DecreaseByVoucher(Order.Items, Order.Voucher.Code!, Order.Total) : Order.Total;
+                //giảm số lượng sản phẩm và tăng số lượng bán.
+                //thêm vào database
+                var Listtask = new List<Task> {
+                    _products.DecreaseQuantity(Order.Items!),
+                    _orders.InsertOneAsync(Order),
+                };
+                if (Order.Voucher != null && Order.Voucher.Code != null)
+                    Listtask.Add(_vouchers.Decrease(Order.Voucher.Code));
+                await Task.WhenAll(Listtask.ToArray());
             }
-            return entity;
+            return Order;
 
         }
+
 
         public async Task<bool> DeleteOrder(string id)
         {
@@ -102,9 +112,7 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<Order> EditOrder(Order entity, string id)
         {
-            var curent = _orders.FindSync(e => e.Id == id);
-            if (curent == null)
-                throw new Exception("item does not exits");
+            var curent = await _orders.FindSync(e => e.Id == id).FirstOrDefaultAsync() ?? throw new Exception("item does not exist");
             var filter = Builders<Order>.Filter.Eq(e => e.Id, id);
             var updatebuilder = new List<UpdateDefinition<Order>>();
 
@@ -113,24 +121,118 @@ namespace Backend_WebLaptop.Respository
                 updatebuilder.Add(Builders<Order>.Update.Set(e => e.Status, entity.Status));
             if (entity.Items != null)
                 updatebuilder.Add(Builders<Order>.Update.Set(e => e.Items, entity.Items));
-            if (entity.PaymentMethodId != null)
-                updatebuilder.Add(Builders<Order>.Update.Set(e => e.PaymentMethodId, entity.PaymentMethodId));
+            if (entity.PaymentMethod != null)
+                updatebuilder.Add(Builders<Order>.Update.Set(e => e.PaymentMethod, entity.PaymentMethod));
             if (entity.ShippingAddress != null)
                 updatebuilder.Add(Builders<Order>.Update.Set(e => e.ShippingAddress, entity.ShippingAddress));
-            if (entity.Paid != null)
+            if (entity.Paid != curent.Paid)
                 updatebuilder.Add(Builders<Order>.Update.Set(e => e.Paid, entity.Paid));
             var update = Builders<Order>.Update.Combine(updatebuilder);
             return await _orders.FindOneAndUpdateAsync(filter, update);
         }
 
+        public Task<Order> UpdateStatus(string id)
+        {
+            throw new NotImplementedException();
+        }
+        /// <summary>
+        /// Validate Data
+        /// Type order:Default is customer Equal true is admin Create Order
+        /// </summary>
+        /// <param name="entity"> Order</param>
+        /// <param name="type"> </param>
+        /// <returns></returns>
+        async Task<Order> Validate(Order entity,bool byAdmin)
+        {
+            if (entity.ShippingAddress == null)
+                throw new Exception("Người nhận không hợp lệ");
+            //Nếu là khách đặt (mặc định)
+            if (!byAdmin )
+            {
+                entity.Status = new Shipping(1);
+                //kiểm tra địa chỉ giao hàng
+                if (entity.ShippingAddress == null || (entity.ShippingAddress.Id != null && await _shippingaddress.GetbyId(entity.ShippingAddress.Id) == null))
+                    throw new Exception("Địa chỉ giao hàng không hợp lệ");
+                entity.ShippingAddress = await _shippingaddress.GetbyId(entity.ShippingAddress.Id!);
+            }
+            //Admin tạo đơn hàng
+            //kiểm tra sản phẩm
+            if (entity.Items.Count == 0)
+                throw new Exception("Đơn hàng phải có ít nhất 1 sản phẩm");
+            if (entity.Items.Any(e => e.Product == null))
+                throw new Exception("Yêu cầu không hợp lệ");
+            //kiểm tra phương thức thanh toán
+            if (entity.PaymentMethod != null )
+            {
+                var payment = await _payments.GetbyId(entity.PaymentMethod.Id!) ?? throw new Exception("Phương thức thanh toán không hợp lệ");
+                entity.PaymentMethod = payment;
+            }
 
+            //Kiểm tra voucher
+            if (entity.Voucher != null)
+            {
+                var voucher =await  _vouchers.GetVoucherbyCode(entity.Voucher.Code!) ?? throw new Exception("Mã giảm giá không hợp lệ");
+                if (voucher.Quantity <= 0)
+                    throw new Exception("Mã giảm giá đã hết số lượt sử dụng");
+                entity.Voucher = voucher;
+            }
+            //kiểm tra số lượng sản phẩm có đủ để bán hay không
+             entity.Items= await _products.Cansell(entity.Items);
+            return entity;
+        }
+        async Task<int> Gettoltal(List<OrderItem> items)
+        {
+            int sum = 0;
+            foreach (var item in items)
+            {
+                var product = await _products.GetbyId(item.Product!.Id!);
+                if (product != null)
+                    sum += (product.Price) * item.Quantity;
+            }
+            return sum;
+        }
 
-        public Task<Order> GetOrderbyCode(string voucherCode)
+        async Task<int> DecreaseByVoucher(List<OrderItem> OrderItems, string code,int Total)
+        {
+            var voucher = await _vouchers.GetVoucherbyCode(code);
+            //kiểm tra voucher còn sử dụng được không
+            if (!_vouchers.IsValidCode(voucher))
+                throw new Exception("Voucher không thể sử dụng");
+            var total_for_decrease = 0;//tổng giá trị của sản phẩm được giảm giá
+            //trường hợp voucher giới hạn sản phẩm
+            if (voucher.Products != null && voucher.Products.Count >= 0)
+                foreach (var item in OrderItems)
+                {
+                    if (voucher.Products.Contains(item.Product!.Id!))
+                        total_for_decrease += item.Product.Price;
+                }
+            else
+                total_for_decrease = Total;
+            var remaining_no_decrease = Total - total_for_decrease;//số tiền còn lại 
+            //kiểm tra đã đạt đơn tối thiểu để sử dụng voucher chưa
+            if (voucher.MinApply != null && total_for_decrease < voucher.MinApply)
+                if (total_for_decrease < voucher.MinApply)
+                    throw new Exception("Đơn hàng chưa đủ điều kiện sử dụng Voucher");
+            double result;
+            if (voucher.IsValue)//trường hợp giảm trực tiếp
+                result = (total_for_decrease - voucher.Value)+remaining_no_decrease;
+            else //giảm theo phần trăm
+            {
+                var valuedef = total_for_decrease * (voucher.Value) / 100;
+                if (valuedef > voucher.MaxReduce)//lớn hơn giảm tối đa thì lấy giảm tối đa
+                    valuedef = voucher.MaxReduce;
+                result = Total - valuedef;
+            }
+            return (int)result;
+
+        }
+
+        public Task<Order> CheckOrder(Order entity)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Order> GetOrderbyId(string voucherId)
+        public Task<Order> GetOrderbyId(string id)
         {
             throw new NotImplementedException();
         }
@@ -140,64 +242,6 @@ namespace Backend_WebLaptop.Respository
             throw new NotImplementedException();
         }
 
-        public Task<Order> UpdateStatus(string id)
-        {
-            throw new NotImplementedException();
-        }
-
-        async Task<bool> Validate(Order entity)
-        {
-            //check voucher isvalid
-            if (entity.VoucherCode != null && !await _vouchers.IsValidCode(entity.VoucherCode!))
-            {
-                throw new Exception("VoucherCode invalid");
-            }
-            bool[] arr = new bool[]
-            {
-              string.IsNullOrWhiteSpace(entity.PaymentMethodId) ||(!string.IsNullOrWhiteSpace(entity.PaymentMethodId)&& await  _payments.Exits(entity.PaymentMethodId)),
-              !string.IsNullOrWhiteSpace(entity.AccountId)&& await _accounts.Exits(entity.AccountId),
-                entity.Items!=null&&entity.Items.Count>0,
-                entity.Status!=null&&entity.Status.Count>0,
-                entity.ShippingAddress!=null,
-            };
-            foreach (var item in arr)
-            {
-                if (item == false)
-                    return false;
-            }
-            return true;
-        }
-        async Task<int> Gettoltal(List<OrderItem> items)
-        {
-            int sum = 0;
-            foreach (var item in items)
-            {
-                var product = await _products.GetbyId(item.ProductId!);
-                if (product != null)
-                    sum += (product.Price) * item.Quantity;
-            }
-            return sum;
-        }
-
-        async Task<int> DecreaseByVoucher(int total, string code)
-        {
-            var voucher = await _vouchers.GetVoucherbyCode(code);
-            if (total < voucher.MinApply)
-                return total;
-            double result;
-            if (voucher.IsValue)
-                result = total - voucher.Value;
-            else
-            {
-                var valuedef = total * (voucher.Value) / 100;
-                if (valuedef > voucher.MaxReduce)//lớn hơn giảm tối đa thì lấy giảm tối đa
-                    valuedef = voucher.MaxReduce;
-                result = total - valuedef;
-            }
-            return (int)result;
-
-        }
-
-
+       
     }
 }

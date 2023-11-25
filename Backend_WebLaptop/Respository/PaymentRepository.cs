@@ -43,7 +43,7 @@ namespace Backend_WebLaptop.Respository
             var curent = await GetbyId(entity.Id!);
             if (curent == null)
             {
-                throw new Exception("This record does not exits");
+                throw new Exception("This record does not exist");
             }
             entity.Name ??= curent.Name;
             entity.Active ??= curent.Active;

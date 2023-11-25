@@ -30,7 +30,7 @@ namespace Backend_WebLaptop.Respository
             foreach (var item in items)
             {
                 var update = Builders<Product>.Update.Inc(e => e.Sold, item.Quantity).Inc(e => e.Stock, -item.Quantity);
-                task.Add(_products.FindOneAndUpdateAsync(e => e.Id == item.ProductId, update));
+                task.Add(_products.FindOneAndUpdateAsync(e => e.Id == item.Product.Id, update));
             }
             await Task.WhenAll(task);
             return true;
@@ -38,8 +38,18 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<bool> DeletebyId(string id)
         {
-            var rs = await _products.DeleteOneAsync(e => e.Id == id);
-            return rs.DeletedCount > 0;
+            
+            var curent = await GetbyId(id);
+            if (curent != null)
+            {
+                //Xoá ảnh
+                curent.Images.ForEach(async (item) => await _upload.Delete_Image(2, item));
+                var rs = await _products.DeleteOneAsync(e => e.Id == id);
+                return rs.DeletedCount > 0;
+            }
+            throw new Exception("Product is exist");
+           
+           
         }
 
         public async Task<bool> Exits(string id)
@@ -108,21 +118,27 @@ namespace Backend_WebLaptop.Respository
             throw new Exception("Data invalid");
         }
 
-        public async Task<Product> Update(Product entity)
+        public async Task<Product> Update(ImageUpload<Product> entity)
         {
-            var curent = await _products.FindSync(e => entity.Id == entity.Id).FirstOrDefaultAsync();
-            entity.CreateAt = curent.CreateAt;
-            entity.Sold = (entity.Sold >= 0 ? curent.Sold : entity.Sold);
-            entity.Price = (entity.Price <= 1000 ? curent.Price : entity.Price);
-            entity.MaxPrice = (entity.MaxPrice <= 1000 ? curent.MaxPrice : entity.MaxPrice);
-            entity.View = (entity.View <= 0 ? curent.View : entity.View);
-            entity.Categories = (entity.Categories == null || entity.Categories.Count == 0) ? curent.Categories : entity.Categories;
-            entity.Stock = entity.Stock <= 0 ? curent.Stock : entity.Stock;
-            entity.Weight = entity.Weight <= 0 ? curent.Weight : entity.Weight;
-            entity.BrandName = String.IsNullOrWhiteSpace(entity.BrandName) ? curent.BrandName : entity.BrandName;
-            entity.Special = (entity.Special == null || entity.Special.Count == 0) ? curent.Special : entity.Special;
-            if (await ValidateData(entity))
-                return await _products.FindOneAndReplaceAsync(e => e.Id == entity.Id, entity);
+            var curent = await _products.FindSync(e =>e.Id == entity.Data!.Id).FirstOrDefaultAsync();
+            entity.Data!.CreateAt = curent.CreateAt;
+            entity.Data.Sold = (entity.Data.Sold >= 0 ? curent.Sold : entity.Data.Sold);
+            entity.Data.Price = (entity.Data.Price <= 1000 ? curent.Price : entity.Data.Price);
+            entity.Data.MaxPrice = (entity.Data.MaxPrice <= 1000 ? curent.MaxPrice : entity.Data.MaxPrice);
+            entity.Data.View = (entity.Data.View <= 0 ? curent.View : entity.Data.View);
+            entity.Data.Categories = (entity.Data.Categories == null || entity.Data.Categories.Count == 0) ? curent.Categories : entity.Data.Categories;
+            entity.Data.Stock = entity.Data.Stock <= 0 ? curent.Stock : entity.Data.Stock;
+            entity.Data.Weight = entity.Data.Weight <= 0 ? curent.Weight : entity.Data.Weight;
+            entity.Data.BrandName = String.IsNullOrWhiteSpace(entity.Data.BrandName) ? curent.BrandName : entity.Data.BrandName;
+            entity.Data.Special = (entity.Data.Special == null || entity.Data.Special.Count == 0) ? curent.Special : entity.Data.Special;
+            if (entity.Images==null||entity.Images.Count==0)
+                throw new Exception("please add image");
+            //xoá ảnh cũ
+             curent.Images.ForEach(async (item) => await _upload.Delete_Image(2, item));
+            //up dảnh mới
+            entity.Data.Images = await _upload.UploadProduct_Image(entity);
+            if (await ValidateData(entity.Data))
+                return await _products.FindOneAndReplaceAsync(e => e.Id == entity.Data.Id, entity.Data);
             throw new Exception("Data invalid");
         }
         private async Task<bool> ValidateData(Product entity)
@@ -139,7 +155,7 @@ namespace Backend_WebLaptop.Respository
                 entity.Images!=null&&  entity.Images.Count>=1,
                 entity.Sold>=0,
                 !string.IsNullOrWhiteSpace(entity.ProductName),
-                entity.Special!=null&&entity.Special.Count>0
+                entity.Special!=null&&entity.Special.Count>=0
             };
             foreach (var item in list)
                 if (item == false)
@@ -147,23 +163,31 @@ namespace Backend_WebLaptop.Respository
             return true;
         }
 
-        public async Task<bool> Cansell(List<OrderItem> items)
+     public async Task<List<OrderItem>> Cansell(List<OrderItem> items)
         {
+            var result = new List<OrderItem>();
             //kiểm tra
             foreach (var item in items)
             {
-
-                if (!await Cansell_Item(item.ProductId!, item.Quantity))
-                    throw new Exception($"{item.ProductId} không có đủ số lượng để bán");
+                var product = await Cansell_Item(item.Product!.Id!, item.Quantity) ?? throw new Exception("Một số sản phẩm không đủ số lượng để bán");
+                result.Add(new OrderItem()
+                {
+                    Product = product,
+                    Quantity = item.Quantity
+                }) ;
             }
-            return true;
+            return result;
         }
-        async Task<bool> Cansell_Item(string id, int quantity)
+        async Task<Product> Cansell_Item(string id, int quantity)
         {
-            var curentProduct = await _products.FindSync(e => e.Id == id).FirstOrDefaultAsync();
-            return curentProduct.Stock - quantity >= 0;
+            var curentProduct = await _products.FindSync(e => e.Id == id&&e.Stock>=quantity).FirstOrDefaultAsync();
+            return curentProduct;
         }
-
-
+        public async Task<List<Product>> GetbyKeyword(string keywords)
+        {
+          var filter=  Builders<Product>.Filter.Regex(e => e.ProductName, new BsonRegularExpression($"^{keywords}"));
+            var result =await _products.FindAsync(filter);
+            return await result.ToListAsync();
+        }
     }
 }
