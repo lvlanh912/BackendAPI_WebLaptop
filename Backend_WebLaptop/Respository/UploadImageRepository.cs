@@ -75,23 +75,24 @@ namespace Backend_WebLaptop.Respository
 
         public async Task Delete_Image(int type, string namefile)
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\images\\");
-            switch (type)
+            try
             {
-                case 1://xoá avatar
-                    path = path + "avatar\\"+namefile;
-                    break;
-                case 2://xoá ảnh sản phẩm
-                    path = path + "products\\" + namefile;
-                    break;
-                case 3://xoá ảnh tin đăng
-                    path = path + "posts\\" + namefile;
-                    break;
-                default:
-                    throw new Exception("No type selected");
+                string path = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\images\\");
+                path = type switch
+                {
+                    //xoá avatar
+                    1 => path + "avatar\\" + namefile,
+                    //xoá ảnh sản phẩm
+                    2 => path + "products\\" + namefile,
+                    //xoá ảnh tin đăng
+                    3 => path + "posts\\" + namefile,
+                    _ => throw new Exception("No type selected"),
+                };
+                if (File.Exists(path))//kiểm tra file tồn tại hay không
+                    await Task.Run(() => new FileInfo(path).Delete());
             }
-           if( File.Exists(path))//kiểm tra file tồn tại hay không
-             await Task.Run(() =>  new FileInfo(path).Delete());
+            catch { }
+           
         }
 
       

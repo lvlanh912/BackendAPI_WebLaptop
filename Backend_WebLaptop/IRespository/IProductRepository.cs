@@ -13,5 +13,6 @@ namespace Backend_WebLaptop.IRespository
         Task<bool> Exits(string id);
         Task<bool> DecreaseQuantity(List<OrderItem> items);
         Task<List<OrderItem>> Cansell(List<OrderItem> items);
+        Task RestoreItem(string productid,int quantity);
     }
 }

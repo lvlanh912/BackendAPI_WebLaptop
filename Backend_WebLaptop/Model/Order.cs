@@ -55,6 +55,8 @@ namespace Backend_WebLaptop.Model
         /// 
         public Shipping(int type)
         {
+            if (type < 0 || type > 3)
+                throw new Exception("Not have this type");
             switch (type)
             {
                 default:

@@ -106,42 +106,35 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<bool> DeleteOrder(string id)
         {
-            var rs = await _orders.DeleteOneAsync(e => e.Id == id);
-            return rs.DeletedCount > 0;
+            var curent = await GetOrderbyId(id);
+            if (curent.Status!.Code != 0)
+                throw new Exception("Chỉ cho phép xoá đơn hàng đã huỷ");
+            //Hoàn số lượng sản phẩm trong đơn
+            var listtask = new List<Task>();
+            foreach (var item in curent.Items)
+                listtask.Add(_products.RestoreItem(item.Product!.Id!, item.Quantity));
+            if (listtask.Count > 0)
+               await Task.WhenAll(listtask.ToArray());
+            return _orders.DeleteOne(e => e.Id == id).DeletedCount>0;
+             
         }
 
-        public async Task<Order> EditOrder(Order entity, string id)
+        public async Task<bool> EditOrder(string id, int? status, ShippingAddress? shippingAddress,bool? ispaid)
         {
-            var curent = await _orders.FindSync(e => e.Id == id).FirstOrDefaultAsync() ?? throw new Exception("item does not exist");
-            var filter = Builders<Order>.Filter.Eq(e => e.Id, id);
-            var updatebuilder = new List<UpdateDefinition<Order>>();
+            var update = Builders<Order>.Update.Combine();
 
-            //tạo cac thay đổi
-            if (entity.Status != null)
-                updatebuilder.Add(Builders<Order>.Update.Set(e => e.Status, entity.Status));
-            if (entity.Items != null)
-                updatebuilder.Add(Builders<Order>.Update.Set(e => e.Items, entity.Items));
-            if (entity.PaymentMethod != null)
-                updatebuilder.Add(Builders<Order>.Update.Set(e => e.PaymentMethod, entity.PaymentMethod));
-            if (entity.ShippingAddress != null)
-                updatebuilder.Add(Builders<Order>.Update.Set(e => e.ShippingAddress, entity.ShippingAddress));
-            if (entity.Paid != curent.Paid)
-                updatebuilder.Add(Builders<Order>.Update.Set(e => e.Paid, entity.Paid));
-            var update = Builders<Order>.Update.Combine(updatebuilder);
-            return await _orders.FindOneAndUpdateAsync(filter, update);
+            if (shippingAddress != null)
+               update= update.Set(e => e.ShippingAddress, shippingAddress);
+            if (ispaid != null)
+                update= update.Set(e => e.IsPaid, ispaid);
+            if (status != null)
+                update= update.Set(e => e.Status, new Shipping((int)status));
+            var rs= await  _orders.UpdateOneAsync(filter:e=>e.Id==id,update);
+            return rs.ModifiedCount > 0;
+               
+
         }
 
-        public Task<Order> UpdateStatus(string id)
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Validate Data
-        /// Type order:Default is customer Equal true is admin Create Order
-        /// </summary>
-        /// <param name="entity"> Order</param>
-        /// <param name="type"> </param>
-        /// <returns></returns>
         async Task<Order> Validate(Order entity,bool byAdmin)
         {
             if (entity.ShippingAddress == null)
@@ -232,9 +225,10 @@ namespace Backend_WebLaptop.Respository
             throw new NotImplementedException();
         }
 
-        public Task<Order> GetOrderbyId(string id)
+        public async Task<Order> GetOrderbyId(string id)
         {
-            throw new NotImplementedException();
+            var result =await _orders.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+            return result;
         }
 
         public Task<long> Get_toltalSell(DateTime? start, DateTime? end)

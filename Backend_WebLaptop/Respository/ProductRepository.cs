@@ -122,7 +122,7 @@ namespace Backend_WebLaptop.Respository
         {
             var curent = await _products.FindSync(e =>e.Id == entity.Data!.Id).FirstOrDefaultAsync();
             entity.Data!.CreateAt = curent.CreateAt;
-            entity.Data.Sold = (entity.Data.Sold >= 0 ? curent.Sold : entity.Data.Sold);
+            entity.Data.Sold = (entity.Data.Sold <= 0 ? curent.Sold : entity.Data.Sold);
             entity.Data.Price = (entity.Data.Price <= 1000 ? curent.Price : entity.Data.Price);
             entity.Data.MaxPrice = (entity.Data.MaxPrice <= 1000 ? curent.MaxPrice : entity.Data.MaxPrice);
             entity.Data.View = (entity.Data.View <= 0 ? curent.View : entity.Data.View);
@@ -185,9 +185,15 @@ namespace Backend_WebLaptop.Respository
         }
         public async Task<List<Product>> GetbyKeyword(string keywords)
         {
-          var filter=  Builders<Product>.Filter.Regex(e => e.ProductName, new BsonRegularExpression($"^{keywords}"));
+          var filter=  Builders<Product>.Filter.Regex(e => e.ProductName, new BsonRegularExpression($".*{keywords}"));
             var result =await _products.FindAsync(filter);
             return await result.ToListAsync();
+        }
+
+        public async Task RestoreItem(string productid, int quantity)
+        {
+            var update = Builders<Product>.Update.Inc(e => e.Sold, -1).Inc(e => e.Stock, -1);
+           await _products.UpdateOneAsync(e => e.Id == productid, update);
         }
     }
 }

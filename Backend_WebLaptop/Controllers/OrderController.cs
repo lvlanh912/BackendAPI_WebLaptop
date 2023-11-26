@@ -71,32 +71,37 @@ namespace Backend_WebLaptop.Controllers
         }
         [HttpDelete("{id}")]
         //role admin
-        public async Task<ActionResult> Remove_item(string id)
+        public async Task<ActionResult> DeleteOrder(string id)
         {
             try
             {
-                var rs = await _i.DeleteOrder(id);
-                return StatusCode(rs ? 204 : 400, new ResponseApi<string> { Message = rs ? "success" : "failed" }.Format());
+                return StatusCode(200, new ResponseApi<bool>
+                {
+                    Result = await _i.DeleteOrder(id)
+                });
             }
             catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest(ex.Message);
+                return BadRequest(new ResponseApi<bool>
+                {
+                    Result = false,
+                    Message = ex.Message
+                }) ;
             }
         }
         [HttpPut("{id}")]
         //role Admin
-        public async Task<ActionResult> Edit(Order entity, string id)
+        public async Task<ActionResult> Edit(string id,int ? status,ShippingAddress? shippingAddress,bool? ispaid )
         {
             try
             {
-                var rs = await _i.EditOrder(entity, id);
-                return StatusCode(rs != entity ? 200 : 401, new ResponseApi<string> { Message = rs != entity ? "success" : "failed" }.Format());
+                var rs = await _i.EditOrder(id,status, shippingAddress,ispaid);
+                return StatusCode(200,new ResponseApi<bool> { Result=true});
             }
             catch (Exception ex)
             {
                 // Console.WriteLine(e.Message);
-                return BadRequest(ex.Message);
+                return BadRequest(new ResponseApi<bool> { Result = false,Message=ex.Message });
             }
         }
 
