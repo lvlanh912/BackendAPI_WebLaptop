@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
 {
-    [Route("api/{ProductId}/comments")]
+    [Route("api/comments")]
     [ApiController]
     public class CommentController : ControllerBase
     {
@@ -14,20 +14,22 @@ namespace Backend_WebLaptop.Controllers
             _i = i;
         }
         [HttpGet]
-        public async Task<ActionResult> Get_Commnets_byProductId(int pageindex, int size)
+        public async Task<ActionResult> Get_Commnets_byProductId(string? accountid,string? productId,string? keywords,string? sort,int pageindex=1,int pagesize=25)
         {
             try
             {
-                string productId = this.RouteData.Values["ProductId"]!.ToString()!;
                 return StatusCode(200, new ResponseApi<PagingResult<Comment>>
                 {
                     Message = "Success",
-                    Result = await _i.GetAll(pageindex, productId, size)
+                    Result = await _i.GetAll(accountid, productId, keywords,sort??"date",pageindex, pagesize)
                 });
             }
             catch
             {
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool>
+                {
+                    Result = false
+                }) ;
             }
         }
         [HttpPost]

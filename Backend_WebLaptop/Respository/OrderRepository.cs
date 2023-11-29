@@ -167,6 +167,14 @@ namespace Backend_WebLaptop.Respository
                 var voucher =await  _vouchers.GetVoucherbyCode(entity.Voucher.Code!) ?? throw new Exception("Mã giảm giá không hợp lệ");
                 if (voucher.Quantity <= 0)
                     throw new Exception("Mã giảm giá đã hết số lượt sử dụng");
+                //kiểm tra voucher đã được sử dụng trước đó chưa
+                if (entity.AccountId != null)
+                {
+                    var result = await _orders.FindSync(e => e.Voucher != null && e.Voucher.Code == entity.Voucher.Code).FirstOrDefaultAsync();
+                    if (result != null) throw new Exception("Mã giảm giá đã từng được sử dụng trước đó");
+                }
+                   
+  
                 entity.Voucher = voucher;
             }
             //kiểm tra số lượng sản phẩm có đủ để bán hay không

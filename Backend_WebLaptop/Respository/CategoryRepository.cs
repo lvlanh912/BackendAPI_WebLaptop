@@ -152,5 +152,10 @@ namespace Backend_WebLaptop.Respository
         }
 
         public async Task<List<Category>> GetAllCategorybyName(string name)=> await _categories.FindSync(e => e.Name!.ToLower().Contains(name.ToLower())).ToListAsync();
+
+        public async Task<List<Category>> GetListChildsById(string parentID)
+        {
+            return await _categories.FindSync(e => e.ParentCategoryId == parentID).ToListAsync();
+        }
     }
 }

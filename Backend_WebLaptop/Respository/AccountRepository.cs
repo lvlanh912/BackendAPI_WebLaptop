@@ -3,6 +3,7 @@ using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Xml.Linq;
 
 namespace Backend_WebLaptop.Respository
 {
@@ -12,10 +13,14 @@ namespace Backend_WebLaptop.Respository
         private readonly IUploadImageRepository _upload;
         private readonly ICartRepository _carts;
         private readonly IAddressRepository _address;
+        private readonly IMongoCollection<Order>? _order;
+        private readonly IMongoCollection<Comment>? _comment;
 
         public AccountRepository(IDatabaseService databaseService, IUploadImageRepository upload, ICartRepository carts, IAddressRepository address)
         {
             _accounts = databaseService.Get_Accounts_Collection();
+            _order = databaseService.Get_Orders_Collection();
+            _comment = databaseService.Get_Comments_Collection();
             _upload = upload;
             _carts = carts;
             _address = address;
@@ -128,5 +133,19 @@ namespace Backend_WebLaptop.Respository
             return entity.Data;
         }
 
+        public async Task<int> GetTotalOrder(string accountId)
+        {
+            var filter = Builders<Order>.Filter.Eq(e => e.AccountId, accountId);
+            var rs = await _order.FindSync(filter).ToListAsync();
+            return rs.Count;
+
+        }
+
+        public async Task<int> GetTotalComment(string accountId)
+        {
+            var filter = Builders<Comment>.Filter.Eq(e => e.AccountId, accountId);
+            var rs = await _comment.FindSync(filter).ToListAsync();
+            return rs.Count;
+        }
     }
 }

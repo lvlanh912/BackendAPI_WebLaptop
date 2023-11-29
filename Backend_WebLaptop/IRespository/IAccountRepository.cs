@@ -11,5 +11,7 @@ namespace Backend_WebLaptop.IRespository
         Task<Account> Update(ImageUpload<Account> entity);
         Task<bool> Exits(string id);
         Task<bool> ExitsByUserName(string username);
+        Task<int> GetTotalOrder(string accountId);
+        Task<int> GetTotalComment(string accountId);
     }
 }

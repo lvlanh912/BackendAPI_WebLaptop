@@ -14,6 +14,14 @@ builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 builder.Services.Configure<DatabaseConfig>(
     builder.Configuration.GetSection("Database")
 );
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173/");
+        });
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -51,6 +59,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 app.UseStaticFiles();
+app.UseCors();
 
 app.UseHttpsRedirection();
 

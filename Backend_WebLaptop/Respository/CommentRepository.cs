@@ -1,7 +1,9 @@
 ﻿using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Linq;
 
 namespace Backend_WebLaptop.Respository
 {
@@ -22,17 +24,37 @@ namespace Backend_WebLaptop.Respository
             return rs.DeletedCount != 0;
         }
 
-        public async Task<PagingResult<Comment>> GetAll(int pageindex, string productId, int size)
+       public async Task<PagingResult<Comment>> GetAll(string? accountid, string? productId, string? keywords, string sort, int pageindex, int pagesize)
         {
-
-            var comments = await _comments.FindAsync(e => e.ProductId == productId);
-            var result = new PagingResult<Comment>
+            //Filter
+            var filter = Builders<Comment>.Filter;
+            var builderFilter = filter.Empty;
+            if (accountid != null)
+                builderFilter &= filter.Eq(e => e.AccountId, accountid);
+            if(productId!=null)
+                builderFilter &= filter.Eq(e => e.ProductId, productId);
+            if(keywords!=null)
+                builderFilter &= filter.Regex(e => e.Conntent, new BsonRegularExpression($".*{keywords}"));
+            var result = await _comments.FindSync(builderFilter).ToListAsync();
+            //sort
+            result = sort switch
+            {
+                "date_desc" => result.OrderByDescending(e => e.CreateAt).ToList(),
+                "star"=> result.OrderBy(e => e.Star).ToList(),
+                "star_desc" => result.OrderByDescending(e => e.Star).ToList(),
+                _ => result.OrderBy(e => e.CreateAt).ToList(),
+                
+            };
+           
+            return new PagingResult<Comment>
             {
                 PageIndex = pageindex,
-                PageSize = size,
-                Items = comments.ToEnumerable<Comment>().OrderBy(e => e.CreateAt).Skip((pageindex - 1) * size).Take(size)
+                PageSize = pagesize,
+                Items = result.Skip((pageindex - 1) * pagesize).Take(pagesize),
+                TotalCount=result.Count
+                
             };
-            return result;
+    
         }
         public async Task<Comment> GetbyId(string id) => await _comments.FindSync(e => e.Id == id).FirstOrDefaultAsync();
 

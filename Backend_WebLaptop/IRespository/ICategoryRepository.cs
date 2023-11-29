@@ -6,6 +6,7 @@ namespace Backend_WebLaptop.IRespository
     {
         Task<PagingResult<Category>> GetAll(string? ParentCategoryId, string? keywords, string sort, int pageindex , int pagesize);
         Task<List<Category>> GetAllCategorybyName(string name);
+        Task<List<Category>> GetListChildsById(string parentID);
         Task<Category> GetbyId(string id);
         Task<bool> DeletebyId(string id);
         Task<Category> Insert(Category entity);

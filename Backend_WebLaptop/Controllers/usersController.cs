@@ -49,6 +49,42 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest();
             }
         }
+        [HttpGet("total-orders")]
+        public async Task<ActionResult> GetTotalOrder (string id)
+        {
+            try
+            {
+                var rs = await _i.GetTotalOrder(id);
+                return StatusCode(200, new ResponseApi<int>
+                {
+                    Result = rs
+                    
+                });
+            }
+            catch
+            {
+                return BadRequest(new ResponseApi<bool> { Result=false});
+            }
+        }
+        [HttpGet("total-comments")]
+        public async Task<ActionResult> GetTotalComment(string id)
+        {
+            try
+            {
+                var rs = await _i.GetTotalComment(id);
+                return StatusCode(200, new ResponseApi<int>
+                {
+                    Result = rs
+
+                });
+            }
+            catch
+            {
+                return BadRequest(new ResponseApi<bool> { Result = false });
+            }
+        }
+
+
         [HttpPost]
         public async Task<ActionResult> Add([FromForm] string data, List<IFormFile>? images)
         {

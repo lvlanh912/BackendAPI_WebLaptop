@@ -15,14 +15,14 @@ namespace Backend_WebLaptop.Controllers
             _i = i;
         }
         [HttpGet]
-        public async Task<ActionResult> Get_Products( string? keywords, string? brand,string? category, int? min, int? max, string? sort, int pageindex=1, int Pagesize=25)
+        public async Task<ActionResult> Get_Products( string? keywords, string? brand,bool?stock, string? category, int? min, int? max, string? sort, int pageindex=1, int Pagesize=25)
         {
             try
             {
                 return StatusCode(200, new ResponseApi<PagingResult<Product>>
                 {
                     Message = "Success",
-                    Result = await _i.GetAll( keywords,  brand,category,  min,  max, sort??"date",  pageindex, Pagesize )
+                    Result = await _i.GetAll( keywords, stock,  brand,category,  min,  max, sort??"date",  pageindex, Pagesize )
                 });
             }
             catch(Exception ex)
@@ -53,7 +53,7 @@ namespace Backend_WebLaptop.Controllers
                 });
             }
         }
-        [HttpGet("id")]
+        [HttpGet("{id}")]
         public async Task<ActionResult> GetById(string id)
         {
             try
@@ -67,6 +67,25 @@ namespace Backend_WebLaptop.Controllers
             catch
             {
                 return BadRequest();
+            }
+        }
+        [HttpPost("view")]
+        public async Task<ActionResult> AddView(string id)
+        {
+            try
+            {
+                await  _i.InsertView(id);
+                return StatusCode(201, new ResponseApi<bool>
+                {
+                    Result = true
+                });
+            }
+            catch
+            {
+                return BadRequest( new ResponseApi<bool>
+                {
+                    Result = false
+                });
             }
         }
         [HttpPost]

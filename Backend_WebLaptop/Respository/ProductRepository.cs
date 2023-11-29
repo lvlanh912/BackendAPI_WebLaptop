@@ -58,7 +58,7 @@ namespace Backend_WebLaptop.Respository
             return rs != null;
         }
 
-        public async Task<PagingResult<Product>> GetAll(string? keywords, string? brand, string? category, int? min, int? max, string sort, int pageindex, int Pagesize)
+        public async Task<PagingResult<Product>> GetAll(string? keywords, bool? stock, string? brand, string? category, int? min, int? max, string sort, int pageindex, int Pagesize)
         {
         //fillter
             //từ khoá
@@ -68,16 +68,22 @@ namespace Backend_WebLaptop.Respository
                 result = result.FindAll(e => e.Categories.Contains(category));
             //hãng
             if (brand != null)
-                result = result.FindAll(e => e.BrandName.ToLower().Contains(brand.ToLower()));
+                result = result.FindAll(e => e.BrandName.Contains(brand.Trim().ToUpper()));
             //giá tối thiểu
             if (min != null)
                 result = result.FindAll(e => e.Price >= min);
             //giá tối đa
             if (max != null)
                 result = result.FindAll(e => e.Price <= max);
+            //tình trạng hàng
+            if (stock != null)
+                result = stock==true ? result.FindAll(e => e.Stock > 0) : result.FindAll(e => e.Stock == 0);
+
             //sort
             result = sort switch
             {
+                "name" => result.OrderBy(e => e.ProductName).ToList(),
+                "name_desc" => result.OrderByDescending(e => e.ProductName).ToList(),
                 "date_desc" => result.OrderByDescending(e => e.CreateAt).ToList(),
                 "price" => result.OrderBy(e => e.Price).ToList(),
                 "price_desc" => result.OrderByDescending(e => e.Price).ToList(),
@@ -110,6 +116,7 @@ namespace Backend_WebLaptop.Respository
             entity.Data.CreateAt = DateTime.Now;
             entity.Data.Sold = 0;//đã bán = 0
             entity.Data.View = 0;//lượt xem = 0
+            entity.Data.BrandName = entity.Data.BrandName.TrimEnd().TrimStart().ToUpper();
             if (await ValidateData(entity.Data))
             {
                 await _products.InsertOneAsync(entity.Data);
@@ -194,6 +201,12 @@ namespace Backend_WebLaptop.Respository
         {
             var update = Builders<Product>.Update.Inc(e => e.Sold, -1).Inc(e => e.Stock, -1);
            await _products.UpdateOneAsync(e => e.Id == productid, update);
+        }
+
+        public async Task InsertView(string productid)
+        {
+            var update = Builders<Product>.Update.Inc(e => e.View, 1);
+            await _products.UpdateOneAsync(e => e.Id == productid, update);
         }
     }
 }

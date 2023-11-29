@@ -4,7 +4,7 @@ namespace Backend_WebLaptop.IRespository
 {
     public interface IProductRepository
     {
-        Task<PagingResult<Product>> GetAll(string? keywords, string? brand,string? category, int? min, int? max,string sort, int pageindex, int Pagesize);
+        Task<PagingResult<Product>> GetAll(string? keywords,bool?stock, string? brand,string? category, int? min, int? max,string sort, int pageindex, int Pagesize);
         Task<List<Product>> GetbyKeyword(string keywords);
         Task<Product> GetbyId(string id);
         Task<bool> DeletebyId(string id);
@@ -14,5 +14,6 @@ namespace Backend_WebLaptop.IRespository
         Task<bool> DecreaseQuantity(List<OrderItem> items);
         Task<List<OrderItem>> Cansell(List<OrderItem> items);
         Task RestoreItem(string productid,int quantity);
+        Task InsertView(string productid);
     }
 }

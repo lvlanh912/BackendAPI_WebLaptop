@@ -13,6 +13,7 @@ namespace Backend_WebLaptop.Controllers
         {
             _i = i;
         }
+        //admin
         [HttpGet]
         public async Task<ActionResult> GetList_Category(string? keywords, string? sort, int pageindex = 1, int pagesize = 25)
         {
@@ -22,6 +23,7 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _i.GetAll(null,keywords,sort??"name",pageindex,pagesize)
             });
         }
+        //admin
         [HttpGet("getbyname")]
         public async Task<ActionResult> FindCategorybyName(string name)
         {
@@ -31,15 +33,18 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _i.GetAllCategorybyName(name)
             });
         }
+        //admin
         [HttpGet("{ParentCategoryId}")]
-        public async Task<ActionResult> GetListChildsById(string ParentCategoryId, string? keywords, string? sort, int pageindex = 1, int pagesize = 25)
+        public async Task<ActionResult> GetListChildsById(string ParentCategoryId, string? keywords, string? sort, int pageindex=1, int pagesize=25)
         {
             return StatusCode(200, new ResponseApi<PagingResult<Category>>
             {
                 Message = "Success",
                 Result = await _i.GetAll(ParentCategoryId, keywords, sort ?? "name", pageindex, pagesize)
             });
+
         }
+        //admin
         [HttpGet("getbyId")]
         public async Task<ActionResult> GetbyId(string id)
         {
@@ -57,6 +62,7 @@ namespace Backend_WebLaptop.Controllers
             }
            
         }
+        //admin
         [HttpPost]
         public async Task<ActionResult> Insert_new(Category entity)
         {
@@ -73,6 +79,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        //admin
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(string id, Category entity)
         {
@@ -91,6 +98,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<string> { Message=ex.Message,Result= "Failed" });
             }
         }
+        //admin
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {
@@ -106,6 +114,26 @@ namespace Backend_WebLaptop.Controllers
             {
                 // Console.WriteLine(e.Message);
                 return BadRequest();
+            }
+        }
+        [HttpGet("get-childs-category")]
+        public async Task<ActionResult> GetlistChild(string parrentID)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<List<Category>>
+                {
+                    Message = "Success",
+                    Result = await _i.GetListChildsById(parrentID)
+                });
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool>
+                {
+                    Message= ex.Message,
+                    Result=false
+                });
             }
         }
     }
