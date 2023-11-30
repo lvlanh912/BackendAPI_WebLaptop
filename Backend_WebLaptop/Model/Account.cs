@@ -30,9 +30,5 @@ namespace Backend_WebLaptop.Model
 
         [BsonRepresentation(BsonType.ObjectId)]
         public string? WardId { get; set; }
-
-        
-
-       
     }
 }

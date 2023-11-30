@@ -19,6 +19,14 @@
         public string? VouchersCollections { get; set; }
         public string? StatusOrderingsCollections { get; set; }
         public string? NewsCollections { get; set; }
+        public string? SessionsCollections { get; set; }
+        public string? ChatsCollections { get; set; }
+
+    }
+    public class AuthenticationConfig
+    {
+        public string? SecretKey { get; set; }
+      
 
     }
 }

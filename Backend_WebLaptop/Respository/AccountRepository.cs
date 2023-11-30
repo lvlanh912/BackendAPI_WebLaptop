@@ -1,6 +1,7 @@
 ﻿using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Xml.Linq;
@@ -89,19 +90,33 @@ namespace Backend_WebLaptop.Respository
             return rs != null;
         }
 
+        async Task ValidateAccount(Account entity)
+        {
+            if (entity.Phone != null)
+            {
+                var rs = await _accounts.FindSync(e => e.Phone == entity.Phone).FirstOrDefaultAsync();
+                    if(rs!=null) throw new Exception("Số điện thoại đã được sử dụng");
+            }
+            if (string.IsNullOrEmpty(entity.Username)) throw new Exception("Tên đăng nhập Không được để trống");
+            if (string.IsNullOrEmpty(entity.Password)) throw new Exception("Mật khẩu không được để trống");
+            var V_username = await _accounts.FindSync(e => e.Username == entity.Username).FirstOrDefaultAsync();
+            if(V_username!=null)  throw new Exception("Tên người dùng đã được sử dụng");
+
+            if (string.IsNullOrEmpty(entity.Email)) throw new Exception("Email Không được để trống");
+            var V_email = await _accounts.FindSync(e => e.Email == entity.Email).FirstOrDefaultAsync();
+            if(V_email!=null) throw new Exception("Địa chỉ email đã được sử dụng");
+        }
+
         public async Task<Account> GetbyId(string id) => await _accounts.Find(e => e.Id == id).FirstOrDefaultAsync();
 
         public async Task<Account> Insert(ImageUpload<Account> entity)
         {
-            if (string.IsNullOrWhiteSpace(entity.Data!.Username) || string.IsNullOrWhiteSpace(entity.Data.Password) ||
-                string.IsNullOrWhiteSpace(entity.Data.Email))
-                throw new Exception("Data invalid");
-            if (await ExitsByUserName(entity.Data.Username))
-                throw new Exception("username has been taken");
-            entity.Data.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
+            await  ValidateAccount(entity.Data!);
+            entity.Data!.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
             if (entity.Images != null && entity.Images.Count > 0)
                 entity.Data.ProfileImage = await _upload.UploadProfile_Image(entity);
-            entity.Data.Address += '-' + await _address.GetAddress(entity.Data.WardId!);
+            if(entity.Data.Address!=null)
+                entity.Data.Address += '-' + await _address.GetAddress(entity.Data.WardId!);
             await _accounts!.InsertOneAsync(entity.Data);
             //khởi tạo giỏ hàng
             await _carts.Create(entity.Data.Id);

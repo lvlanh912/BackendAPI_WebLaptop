@@ -21,6 +21,8 @@ namespace Backend_WebLaptop.Database
         private readonly IMongoCollection<Order> _orders;
         private readonly IMongoCollection<Payment> _payments;
         private readonly IMongoCollection<News> _news;
+        private readonly IMongoCollection<Session> _sessions;
+        private readonly IMongoCollection<Chat> _chats;
         public DatabaseService(IOptions<DatabaseConfig> databaseconfig)
         {
             var mongoClient = new MongoClient(databaseconfig.Value.ConnectionString);
@@ -38,6 +40,8 @@ namespace Backend_WebLaptop.Database
             _orders = mongoDatabase.GetCollection<Order>(databaseconfig.Value.OrdersCollections);
             _payments = mongoDatabase.GetCollection<Payment>(databaseconfig.Value.PaymentsCollections);
             _news= mongoDatabase.GetCollection<News>(databaseconfig.Value.NewsCollections);
+            _sessions = mongoDatabase.GetCollection<Session>(databaseconfig.Value.SessionsCollections);
+            _chats = mongoDatabase.GetCollection<Chat>(databaseconfig.Value.ChatsCollections);
         }
 
         public IMongoCollection<Account> Get_Accounts_Collection() => _accounts;
@@ -53,6 +57,8 @@ namespace Backend_WebLaptop.Database
         public IMongoCollection<Payment> Get_Payments_Collections() => _payments;
         public IMongoCollection<Order> Get_Orders_Collection() => _orders;
         public IMongoCollection<News> Get_News_Collections() => _news;
-
+        public IMongoCollection<Session> Get_Sessions_Collections() => _sessions;
+        public IMongoCollection<Chat> Get_Chats_Collections() => _chats;
+        
     }
 }

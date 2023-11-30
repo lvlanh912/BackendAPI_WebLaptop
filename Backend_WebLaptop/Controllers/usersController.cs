@@ -1,5 +1,7 @@
-﻿using Backend_WebLaptop.IRespository;
+﻿using Amazon.Runtime.Internal;
+using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -11,11 +13,14 @@ namespace Backend_WebLaptop.Controllers
     {
         private readonly IAccountRepository _i;
         private readonly ICartRepository _cart;
-        public UsersController(IAccountRepository i, ICartRepository cart)
+        private readonly IAuthenticationRepository _auth;
+        public UsersController(IAccountRepository i, ICartRepository cart,IAuthenticationRepository auth)
         {
             _i = i;
             _cart = cart;
+            _auth = auth;
         }
+        //[Authorize(Roles = "Admin")]//theo role
         [HttpGet]
         public async Task<ActionResult> Getall(string? keywords,string? type, DateTime? startdate, DateTime? enddate, int? role, bool? gender, string? sort, int pageIndex = 1, int pageSize = 5)
         {
@@ -32,6 +37,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        //admin
         [HttpGet("{id}")]
         public async Task<ActionResult> GetById(string id)
         {
@@ -49,6 +55,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest();
             }
         }
+        //admin
         [HttpGet("total-orders")]
         public async Task<ActionResult> GetTotalOrder (string id)
         {
@@ -66,6 +73,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<bool> { Result=false});
             }
         }
+        //admin
         [HttpGet("total-comments")]
         public async Task<ActionResult> GetTotalComment(string id)
         {
@@ -83,8 +91,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<bool> { Result = false });
             }
         }
-
-
+        //admin
         [HttpPost]
         public async Task<ActionResult> Add([FromForm] string data, List<IFormFile>? images)
         {
@@ -103,6 +110,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<string> { Message = ex.Message });
             }
         }
+        //admin
         [HttpPut("{id}")]
         public async Task<ActionResult> Update([FromForm] string data, List<IFormFile>? images)
         {
@@ -122,6 +130,8 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest( new ResponseApi<string> { Message=ex.Message});
             }
         }
+        //admin
+        //[Authorize(Roles = "admin")]//theo role
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {
@@ -135,8 +145,53 @@ namespace Backend_WebLaptop.Controllers
                 return NotFound();
             }
         }
-
+        //no-role
+        [HttpPost("sign-up")]
+        public async Task<ActionResult> SignUp(Account account)
+        {
+            try
+            {
+                var result= await _i.Insert(new ImageUpload<Account> { Data = account });
+                return StatusCode(201, new ResponseApi<Account> { Message = "Đăng ký thành công" }.Format());
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(new ResponseApi<string> { Message = $"Đăng ký thất bại: {ex.Message}" });
+            }
+        }
+        [HttpPost("sign-in")]
+        public async Task<ActionResult> SignIn(Account account)
+        {
+            try
+            {
+                var ip = HttpContext.Connection.RemoteIpAddress;
+                var result = await _auth.Createtoken(account);
+                return StatusCode(201, new ResponseApi<string> { Message = "Đăng nhập thành công",Result=result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<string> { Message = $"Đăng nhập thất bại: {ex.Message}" });
+            }
+        }
+        
+        [Authorize]
+        [ServiceFilter(typeof(SessionAuthor))]
+        //thêm 1 lớp kiểm tra database có token này không
+        [HttpGet("profile")]
+        public async Task<ActionResult> GetProfile()
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<string> { Message = "thành công" }.Format());
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+        //no-role
     }
+
 }
 
 

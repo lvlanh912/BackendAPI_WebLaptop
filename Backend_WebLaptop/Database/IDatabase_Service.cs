@@ -18,6 +18,8 @@ namespace Backend_WebLaptop.Database
         IMongoCollection<Order> Get_Orders_Collection();
         IMongoCollection<Payment> Get_Payments_Collections();
         IMongoCollection<News> Get_News_Collections();
+        IMongoCollection<Session> Get_Sessions_Collections();
+        IMongoCollection<Chat> Get_Chats_Collections();
 
     }
 }
