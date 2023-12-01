@@ -30,7 +30,23 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<string> { Message=ex.Message});
             }
         }
+        [HttpGet("sum-expired")]
+        public async Task<ActionResult> GetTotalExpired()
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<long>
+                {
+                    Result = await _i.GetTotalExpired(),
+                    Message = "Success"
 
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
+            }
+        }
         [HttpGet("{id}")]
         public async Task<ActionResult> Getbyid(string id)
         {

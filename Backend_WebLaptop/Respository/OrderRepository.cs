@@ -244,6 +244,10 @@ namespace Backend_WebLaptop.Respository
             throw new NotImplementedException();
         }
 
-       
+        public async Task<long> Get_CountPending()
+        {
+            var filter = Builders<Order>.Filter.Eq(e => e.Status!.Code, 1);
+            return await _orders.CountDocumentsAsync(filter);
+        }
     }
 }

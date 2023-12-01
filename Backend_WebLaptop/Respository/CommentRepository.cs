@@ -58,6 +58,9 @@ namespace Backend_WebLaptop.Respository
         }
         public async Task<Comment> GetbyId(string id) => await _comments.FindSync(e => e.Id == id).FirstOrDefaultAsync();
 
+        public async Task<long> GetTotalCreatebyTime(DateTime start, DateTime end)=> await _comments.CountDocumentsAsync(e => e.CreateAt >= start && e.CreateAt <= end);
+
+
         public async Task<bool> Insert(Comment entity)
         {
             if (await ValidateData(entity))

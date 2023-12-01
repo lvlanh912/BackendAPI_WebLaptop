@@ -15,5 +15,6 @@ namespace Backend_WebLaptop.IRespository
         Task<List<OrderItem>> Cansell(List<OrderItem> items);
         Task RestoreItem(string productid,int quantity);
         Task InsertView(string productid);
+        Task<long> GetTotalOutStock();
     }
 }

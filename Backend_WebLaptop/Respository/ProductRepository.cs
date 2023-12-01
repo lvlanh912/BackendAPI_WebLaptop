@@ -208,5 +208,7 @@ namespace Backend_WebLaptop.Respository
             var update = Builders<Product>.Update.Inc(e => e.View, 1);
             await _products.UpdateOneAsync(e => e.Id == productid, update);
         }
+        public async Task<long> GetTotalOutStock() => await _products.CountDocumentsAsync(e => e.Stock<=0);
+
     }
 }

@@ -9,5 +9,6 @@ namespace Backend_WebLaptop.IRespository
         Task<bool> DeletebyId(string id);
         Task<News> Insert(ImageUpload<News> entity);
         Task<News> Update(ImageUpload<News> entity);
+        Task<long> GetTotalCreatebyTime(DateTime start, DateTime end);
     }
 }

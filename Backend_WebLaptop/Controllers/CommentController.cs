@@ -13,8 +13,9 @@ namespace Backend_WebLaptop.Controllers
         {
             _i = i;
         }
+        //admin
         [HttpGet]
-        public async Task<ActionResult> Get_Commnets_byProductId(string? accountid,string? productId,string? keywords,string? sort,int pageindex=1,int pagesize=25)
+        public async Task<ActionResult> Get_Commnents_byProductId(string? accountid,string? productId,string? keywords,string? sort,int pageindex=1,int pagesize=25)
         {
             try
             {
@@ -30,6 +31,24 @@ namespace Backend_WebLaptop.Controllers
                 {
                     Result = false
                 }) ;
+            }
+        }
+        //admin
+        [HttpGet("sum-create")]
+        public async Task<ActionResult> GetTotalCreate(DateTime? start, DateTime? end)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<long>
+                {
+                    Result = await _i.GetTotalCreatebyTime(start ?? DateTime.Today, end ?? DateTime.Now),
+                    Message = "Success"
+
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
             }
         }
         [HttpPost]

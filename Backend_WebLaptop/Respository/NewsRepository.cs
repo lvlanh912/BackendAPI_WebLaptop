@@ -88,6 +88,8 @@ namespace Backend_WebLaptop.Respository
            var result= await _news.FindOneAndReplaceAsync(e=>e.Id==entity.Data.Id, entity.Data);
             return result;
         }
-       
+        public async Task<long> GetTotalCreatebyTime(DateTime start, DateTime end)=> await _news.CountDocumentsAsync(e => e.CreateAt >= start && e.CreateAt <= end);
+
+
     }
 }

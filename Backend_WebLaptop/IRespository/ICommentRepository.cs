@@ -10,5 +10,6 @@ namespace Backend_WebLaptop.IRespository
         Task<bool> DeletebyId(string id);
         Task<bool> Insert(Comment entity);
         Task<bool> Update(Comment entity);
+        Task<long> GetTotalCreatebyTime(DateTime start, DateTime end);
     }
 }

@@ -24,6 +24,24 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _i.GetAllOrders(accountid, status, isPaid, paymentId, minPaid, maxPaid, startdate, enddate,sort??"date", pagesize, pageindex)
             });
         }
+        [HttpGet("sum-pending")]
+        public async Task<ActionResult> GetPendingOrder()
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<long>
+                {
+                    Message = "Success",
+                    Result = await _i.Get_CountPending()
+                });
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
+            }
+            
+           
+        }
         //role admin or role user
         [HttpPost("create")]
         public async Task<ActionResult> Insert_new(Order entity)

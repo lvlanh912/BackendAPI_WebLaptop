@@ -34,7 +34,25 @@ namespace Backend_WebLaptop.Controllers
             }
         }
 
-        [HttpGet("search")]
+        [HttpGet("sum-out-stock")]
+        public async Task<ActionResult> GetTotalOutStock()
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<long>
+                {
+                    Result = await _i.GetTotalOutStock(),
+                    Message = "Success"
+
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
+            }
+        }
+
+            [HttpGet("search")]
         public async Task<ActionResult> Get_Products_keyword(string keywords)
         {
             try

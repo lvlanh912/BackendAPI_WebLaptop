@@ -49,6 +49,25 @@ namespace Backend_WebLaptop.Controllers
             }
 
         }
+
+        [HttpGet("sum-create")]
+        public async Task<ActionResult> GetTotalCreate(DateTime? start, DateTime? end)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<long>
+                {
+                    Result = await _i.GetTotalCreatebyTime(start ?? DateTime.Today, end ?? DateTime.Now),
+                    Message = "Success"
+
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult> Add([FromForm] string data, List<IFormFile>? images)
         {

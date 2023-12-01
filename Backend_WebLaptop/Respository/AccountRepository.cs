@@ -162,5 +162,11 @@ namespace Backend_WebLaptop.Respository
             var rs = await _comment.FindSync(filter).ToListAsync();
             return rs.Count;
         }
+
+        public async Task<long> GetTotalCreatebyTime(DateTime start, DateTime end)
+        {
+
+            return await _accounts.CountDocumentsAsync(e => e.CreateAt >= start && e.CreateAt <= end);
+        }
     }
 }

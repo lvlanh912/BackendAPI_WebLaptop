@@ -24,6 +24,7 @@ namespace Backend_WebLaptop.IRespository
         Task<bool> DeleteOrder(string id);
 
         Task<long> Get_toltalSell(DateTime? start, DateTime? end);
+        Task<long> Get_CountPending();
 
         Task<Order> Checkout(Order entity);
     }

@@ -16,5 +16,6 @@ namespace Backend_WebLaptop.IRespository
         Task<bool> DeleteVoucher(string voucherId);
         bool IsValidCode(Voucher entity);
         Task Decrease(string code);
+        Task<long> GetTotalExpired();
     }
 }

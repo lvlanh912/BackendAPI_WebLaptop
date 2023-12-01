@@ -143,5 +143,6 @@ namespace Backend_WebLaptop.Respository
             var update = Builders<Voucher>.Update.Inc(e => e.Quantity, -1);
             await _vouchers.UpdateOneAsync(e => e.Code == code, update);
         }
+        public async Task<long> GetTotalExpired()=> await _vouchers.CountDocumentsAsync(e => e.EndAt<=DateTime.Now);
     }
 }
