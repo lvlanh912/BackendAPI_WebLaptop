@@ -89,5 +89,10 @@ namespace Backend_WebLaptop.Respository
         //xoá giỏ hàng trong database của user
         public async Task DeleteCart(string userId) =>
           await _carts.DeleteOneAsync(e => e.AccountId == userId);
+
+        public Task<Cart> UpdateCart(CartItem cartItem)
+        {
+            throw new Exception();
+        }
     }
 }

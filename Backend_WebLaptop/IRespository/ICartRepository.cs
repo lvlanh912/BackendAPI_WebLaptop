@@ -16,5 +16,6 @@ namespace Backend_WebLaptop.IRespository
         Task<bool> DeleteItem(CartItem cartItem, string userId);
         //xoá giỏ hàng
         Task DeleteCart(string userId);
+        Task<Cart> UpdateCart(CartItem cartItem);
     }
 }

@@ -1,6 +1,8 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Backend_WebLaptop.Controllers
 {
@@ -14,28 +16,37 @@ namespace Backend_WebLaptop.Controllers
             _i = i;
         }
         [HttpGet]
-        //sau thêu authentication vào đây
-        public async Task<ActionResult> Get(string accountid)
-        {
-            return StatusCode(200, new ResponseApi<Cart>
-            {
-                Message = "Success",
-                Result = await _i.GetCart(accountid)
-            });
-        }
-        [HttpPost("add")]
-        public async Task<ActionResult> Insert_new(string accountid, CartItem item)
+        [Authorize(Roles = "Member")]
+        public async Task<ActionResult> Get()
         {
             try
             {
-                return await _i.AddtoCart(item, accountid)
-                    ? StatusCode(200, new ResponseApi<string> { Message = "Success" }.Format())
-                    : StatusCode(400, new ResponseApi<string> { Message = "failed" }.Format());
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                return StatusCode(200, new ResponseApi<Cart>
+                {
+                    Message = "Success",
+                    Result = await _i.GetCart(accounId)
+                });
             }
-            catch
+            catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+        }
+        [HttpPost("add")]
+        [Authorize(Roles = "Member")]
+        public async Task<ActionResult> Insert_new( CartItem item)
+        {
+            try
+            {
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                return StatusCode(201, new ResponseApi<bool> {
+                    Message = "Success",Result= await _i.AddtoCart(item, accounId) 
+                }.Format());
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message=ex.Message,Result=false});
             }
         }
         [HttpPost("remove")]
@@ -45,12 +56,11 @@ namespace Backend_WebLaptop.Controllers
             {
                 return await _i.DeleteItem(item, accountid)
                     ? StatusCode(200, new ResponseApi<string> { Message = "Success" }.Format())
-                    : StatusCode(400, new ResponseApi<string> { Message = "failed" }.Format());
+                    : StatusCode(400, new ResponseApi<string> { Message = "Failed" }.Format());
             }
-            catch
+            catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
             }
         }
         [HttpDelete]
@@ -70,5 +80,22 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest();
             }
         }
+       /* [HttpPatch]
+        public async Task<ActionResult> UpdateOne(CartItem cartItem)
+        {
+            try
+            {
+                var isSuccess = await _i.EmptyCart(userid);
+                return StatusCode(200, new ResponseApi<string>
+                {
+                    Message = isSuccess ? "Success" : "Failed"
+                }.Format());
+            }
+            catch
+            {
+                // Console.WriteLine(e.Message);
+                return BadRequest();
+            }
+        }*/
     }
 }
