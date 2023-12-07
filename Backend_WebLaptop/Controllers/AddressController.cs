@@ -49,5 +49,22 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _i.GetWardbyId(id)
             });
         }
+        [HttpGet("{wardId}")]
+        public async Task<ActionResult> GetFulladdress(string wardId)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<string>
+                {
+                    Message = "Success",
+                    Result = await _i.GetAddress(wardId)
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+
+        }
     }
 }

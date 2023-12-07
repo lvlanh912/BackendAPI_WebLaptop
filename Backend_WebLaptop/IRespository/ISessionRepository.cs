@@ -6,7 +6,8 @@ namespace Backend_WebLaptop.IRespository
     {
         public Task<Session> Insert(Session entity);
         public Task<List<Session>> GetAllSession(string accountId);
-        public Task<bool> RemoveSession(string sessionId);
+        public Task RemoveSession(string sessionId,string accountId);
+        public Task RemoveSessionByValue(string sessionValue);
         public Task<bool> CheckValidSession(string jwtToken);
     }
 }

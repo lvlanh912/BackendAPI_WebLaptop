@@ -4,6 +4,8 @@ using Backend_WebLaptop.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using UAParser;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Backend_WebLaptop.Controllers
 {
@@ -13,12 +15,13 @@ namespace Backend_WebLaptop.Controllers
     {
         private readonly IAccountRepository _i;
         private readonly ICartRepository _cart;
-        private readonly IAuthenticationRepository _auth;
-        public UsersController(IAccountRepository i, ICartRepository cart,IAuthenticationRepository auth)
+        private readonly ISessionRepository _session;
+        
+        public UsersController(IAccountRepository i, ICartRepository cart,ISessionRepository session)
         {
             _i = i;
             _cart = cart;
-            _auth = auth;
+            _session = session;
         }
         //[Authorize(Roles = "Admin")]//theo role
         [HttpGet]
@@ -163,54 +166,130 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<bool> { Result = false,Message=ex.Message });
             }
         }
-        //no-role
-        [HttpPost("sign-up")]
-        public async Task<ActionResult> SignUp(Account account)
-        {
-            try
-            {
-                var result= await _i.Insert(new ImageUpload<Account> { Data = account });
-                return StatusCode(201, new ResponseApi<Account> { Message = "Đăng ký thành công" }.Format());
-            }
-            catch(Exception ex)
-            {
-                return BadRequest(new ResponseApi<string> { Message = $"Đăng ký thất bại: {ex.Message}" });
-            }
-        }
-        [HttpPost("sign-in")]
-        public async Task<ActionResult> SignIn(Account account)
-        {
-            try
-            {
-                var ip = HttpContext.Connection.RemoteIpAddress;
-                var result = await _auth.Createtoken(account);
-                return StatusCode(201, new ResponseApi<string> { Message = "Đăng nhập thành công",Result=result });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseApi<string> { Message = $"Đăng nhập thất bại: {ex.Message}" });
-            }
-        }
-        
-        [Authorize]
+       
+        [Authorize(Roles = "Member")]
         [ServiceFilter(typeof(SessionAuthor))]
-        //thêm 1 lớp kiểm tra database có token này không
         [HttpGet("profile")]
         public async Task<ActionResult> GetProfile()
         {
             try
             {
-                return StatusCode(200, new ResponseApi<string> { Message = "thành công" }.Format());
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                var result = await _i.GetbyId(accounId);
+                result.Password = null;
+                return StatusCode(200, new ResponseApi<Account> { Message = "thành công",Result=result});
             }
-            catch
+            catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
             }
         }
-        //no-role
-    }
 
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpPatch("update-avatar")]
+        public async Task<ActionResult> UpdateAvatar( IFormFile image)
+        {
+            try
+            {
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                var entity = new ImageUpload<Account> { 
+                    Data = new Account { Id = accounId },
+                    Images = new List<IFormFile> { image }
+                };
+                 await _i.UpdateImage(entity);
+                return StatusCode(200, new ResponseApi<Account> { Message = "thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+        }
+
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpPatch("update-infor")]
+        public async Task<ActionResult> UpdateInfor(Account account)
+        {
+            try
+            {
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                account.Id = accounId;
+                await _i.Updateinfor(account);
+                return StatusCode(200, new ResponseApi<Account> { Message = "thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+        }
+        
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpGet("session")]
+        public async Task<ActionResult> GetSession()
+        {
+            try
+            {
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                return StatusCode(200, new ResponseApi<List<Session>> { 
+                    Message = "thành công",
+                    Result = await _session.GetAllSession(accounId)
+            });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+        }
+
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpDelete("delete-session/{id}")]
+        public async Task<ActionResult> DeleteSession(string id)
+        {
+            try
+            {
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                await _session.RemoveSession(id,accounId);
+                return StatusCode(200, new ResponseApi<bool>
+                {
+                    Message = "thành công",
+                    Result=true
+                    
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+        }
+        
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpDelete("logout")]
+        public async Task<ActionResult> Logout()
+        {
+            try
+            {
+                var jwt = HttpContext.Request.Headers.Authorization;
+                await _session.RemoveSessionByValue(jwt);
+                return StatusCode(200, new ResponseApi<bool>
+                {
+                    Message = "thành công",
+                    Result = true
+
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+        }
+    }
 }
+
+
 
 
 

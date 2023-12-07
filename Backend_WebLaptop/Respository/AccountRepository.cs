@@ -168,5 +168,31 @@ namespace Backend_WebLaptop.Respository
 
             return await _accounts.CountDocumentsAsync(e => e.CreateAt >= start && e.CreateAt <= end);
         }
+
+        public async Task UpdateImage(ImageUpload<Account> entity)
+        {
+            if (entity.Images!.Count != 0)
+            {
+                var update = Builders<Account>.Update.Set(e => e.ProfileImage, await _upload.UploadProfile_Image(entity));
+                 await _accounts.UpdateOneAsync(e => e.Id == entity.Data!.Id, update);
+            }
+        }
+
+        public async Task Updateinfor(Account entity)
+        {
+            var task = new List<Task>();
+            //update họ tên
+            if (!string.IsNullOrEmpty(entity.Fullname))
+            {
+                var update = Builders<Account>.Update.Set(e => e.Fullname, entity.Fullname);
+                task.Add(_accounts.UpdateOneAsync(e => e.Id == entity.Id, update));
+            }
+            if (!string.IsNullOrEmpty(entity.Address))
+            {
+                var update = Builders<Account>.Update.Set(e => e.Address, entity.Address);
+                task.Add(_accounts.UpdateOneAsync(e => e.Id == entity.Id, update));
+            }
+            await Task.WhenAll(task);
+        }
     }
 }

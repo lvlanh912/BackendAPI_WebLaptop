@@ -6,7 +6,7 @@ namespace Backend_WebLaptop.IRespository
     {
         Task<List<ShippingAddress>> GetAll(string accountId);//get all shippng address by accountId
         Task<ShippingAddress> GetbyId(string id);
-        Task<bool> DeletebyId(string id);
+        Task DeletebyId(string id,string accountId);
         Task<ShippingAddress> Insert(ShippingAddress entity);
         Task<bool> Update(ShippingAddress entity);
     }

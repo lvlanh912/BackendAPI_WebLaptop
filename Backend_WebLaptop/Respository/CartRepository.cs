@@ -1,6 +1,7 @@
 ﻿using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Backend_WebLaptop.Respository
@@ -43,38 +44,14 @@ namespace Backend_WebLaptop.Respository
             return false;
         }
 
-        public async Task<bool> Create(string userId)
+        public async Task<Cart> Create(string userId)
         {
-            await _carts.InsertOneAsync(new Cart { AccountId = userId, Items = new List<CartItem>() });
-            return true;
+            var cart = new Cart { AccountId = userId, Items = new List<CartItem>() };
+            await _carts.InsertOneAsync(cart);
+            return cart;
         }
 
-        public async Task<bool> DeleteItem(CartItem itemRemove, string userId)
-        {
-            var curentCart = await GetCart(userId);
-            if (curentCart == null)
-                throw new Exception("Account is does not exist");
-            //nếu giỏ hàng trống 
 
-            foreach (var item in curentCart.Items)
-            {
-                //tìm sản phẩm cần xoá trong danh sách sản phẩm
-                if (itemRemove.ProductId == item.ProductId)
-                {
-                    //nếu sau khi xoá sản phẩm đó có số lượng bằng hoặc bé hơn 0 thì xoá khỏi giỏ hàng
-                    if (item.Quantity <= itemRemove.Quantity)
-                        curentCart.Items.Remove(item);
-                    //trường hợp còn lại chỉ cần thay đổi số lượng của sản phẩm trong giỏ hàng bằng số hiện tại trừ số truyền vào
-                    else
-                    {
-                        item.Quantity -= itemRemove.Quantity;
-                    }
-                }
-            }
-            var update = Builders<Cart>.Update.Set(e => e.Items, curentCart.Items);
-            var rs = await _carts.UpdateOneAsync(e => e.AccountId == userId, update);
-            return rs.ModifiedCount > 0;
-        }
 
         public async Task<bool> EmptyCart(string userId)
         {
@@ -83,16 +60,41 @@ namespace Backend_WebLaptop.Respository
             var rs = await _carts.UpdateOneAsync(e => e.AccountId == userId, update);
             return rs.ModifiedCount > 0;
         }
-        public async Task<Cart> GetCart(string userId) =>
-            await _carts.FindSync(e => e.AccountId == userId).FirstOrDefaultAsync();
+        public async Task<Cart> GetCart(string userId){
+            return await _carts.FindSync(e => e.AccountId == userId).FirstOrDefaultAsync() ?? await Create(userId);
+        }
         
         //xoá giỏ hàng trong database của user
         public async Task DeleteCart(string userId) =>
           await _carts.DeleteOneAsync(e => e.AccountId == userId);
 
-        public Task<Cart> UpdateCart(CartItem cartItem)
+        public async Task UpdateCart(CartItem cartItem,string AccountId,bool isDelete)
         {
-            throw new Exception();
+            //Thay đổi số lượng sản phẩm
+            if (!isDelete)
+            {
+                //validate data
+                if (cartItem.Quantity <= 0)
+                    throw new Exception("Không thể cập nhật số lượng");
+                var filterItem = Builders<Cart>.Filter.And(
+                     Builders<Cart>.Filter.Eq(e => e.AccountId, AccountId),
+                     Builders<Cart>.Filter.ElemMatch(e => e.Items, Builders<CartItem>.Filter.Eq(e => e.ProductId, cartItem.ProductId))
+                     );
+                var update = Builders<Cart>.Update.Set("Items.$.Quantity", cartItem.Quantity);
+                await _carts.UpdateOneAsync(filterItem, update);
+            }
+            else
+            {
+                var filterItem = Builders<Cart>.Filter.And(
+                     Builders<Cart>.Filter.Eq(e => e.AccountId, AccountId),
+                     Builders<Cart>.Filter.ElemMatch(e => e.Items, Builders<CartItem>.Filter.Eq(e => e.ProductId, cartItem.ProductId))
+                     );
+                 var update = Builders<Cart>.Update.PullFilter(e=>e.Items, Builders<CartItem>.Filter.Eq(e=>e.ProductId, cartItem.ProductId));
+                await _carts.UpdateOneAsync(filterItem,update);
+            }
+                   
+            
+          
         }
     }
 }

@@ -14,5 +14,7 @@ namespace Backend_WebLaptop.IRespository
         Task<int> GetTotalOrder(string accountId);
         Task<int> GetTotalComment(string accountId);
         Task<long> GetTotalCreatebyTime(DateTime start, DateTime end);
+        Task UpdateImage(ImageUpload<Account> entity);
+        Task Updateinfor(Account entity);
     }
 }

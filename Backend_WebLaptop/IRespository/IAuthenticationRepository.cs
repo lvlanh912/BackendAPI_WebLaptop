@@ -8,7 +8,7 @@ namespace Backend_WebLaptop.IRespository
         /// Create jwt token 
         /// </summary>
         /// <returns></returns>
-        Task<string> Createtoken(Account entity);
+        Task<string> Createtoken(Account entity, string browser,string ipaddress);
         /// <summary>
         /// Check token in database if valid
         /// </summary>

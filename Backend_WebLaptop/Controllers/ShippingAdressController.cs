@@ -1,10 +1,11 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
 {
-    [Route("api/users/")]
+    [Route("api/users/shipping-address")]
     [ApiController]
     public class ShippingAddressController : ControllerBase
     {
@@ -13,67 +14,83 @@ namespace Backend_WebLaptop.Controllers
         {
             _i = i;
         }
-        [HttpGet("{userId}/shipping-address")]
-        public async Task<ActionResult> GetList_ShippingAddress(string userId)
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpGet]
+        public async Task<ActionResult> GetList_ShippingAddress()
         {
-            return StatusCode(200, new ResponseApi<List<ShippingAddress>>
+            try
             {
-                Message = "Success",
-                Result = await _i.GetAll(userId)
-            });
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                return StatusCode(200, new ResponseApi<List<ShippingAddress>>
+                {
+                    Message = "Success",
+                    Result = await _i.GetAll(accounId)
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+
         }
-        [HttpPost("{userId}/shipping-address")]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpPost]
         public async Task<ActionResult> Insert_new(ShippingAddress shippingAddress)
         {
             try
             {
-                shippingAddress.AccountId = this.RouteData.Values["userID"]!.ToString();
+                shippingAddress.AccountId= HttpContext.User.FindFirst("Id")!.Value;
                 return StatusCode(201, new ResponseApi<ShippingAddress>
                 {
                     Message = "Created",
                     Result = await _i.Insert(shippingAddress)
                 });
             }
-            catch
+            catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
             }
         }
-        [HttpPut("{userId}/shipping-address/{id}")]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpPut("{id}")]
         public async Task<ActionResult> Update(string id, ShippingAddress shippingAddress)
         {
             try
             {
-                shippingAddress.AccountId = this.RouteData.Values["userID"]!.ToString();
+                shippingAddress.AccountId = HttpContext.User.FindFirst("Id")!.Value;
                 shippingAddress.Id = id;
-                var isSuccess = await _i.Update(shippingAddress);
-                return StatusCode(200, new ResponseApi<ShippingAddress>
+                return StatusCode(200, new ResponseApi<bool>
                 {
-                    Message = isSuccess ? "Success" : "Failed"
-                }.Format());
+                    Result = await _i.Update(shippingAddress),
+                    Message="success"
+            }.Format());
             }
-            catch
+            catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
             }
         }
-        [HttpDelete("{userId}/shipping-address/{id}")]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {
             try
             {
-                var isSuccess = await _i.DeletebyId(id);
-                return StatusCode(200, new ResponseApi<ShippingAddress>
+                var accountId= HttpContext.User.FindFirst("Id")!.Value;
+                 await _i.DeletebyId(id, accountId);
+                return StatusCode(200, new ResponseApi<bool>
                 {
-                    Message = isSuccess ? "Success" : "Failed"
-                }.Format());
+                    Result = true,
+                    Message = "deleted"
+                });
             }
-            catch
+            catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
             }
         }
     }

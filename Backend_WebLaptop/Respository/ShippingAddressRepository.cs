@@ -16,11 +16,8 @@ namespace Backend_WebLaptop.Respository
             _shippingAddresses = databaseService.Get_ShippingAddress_Collection();
         }
 
-        public async Task<bool> DeletebyId(string id)
-        {
-            var rs = await _shippingAddresses.DeleteOneAsync(e => e.Id == id);
-            return rs.DeletedCount > 0;
-        }
+        public async Task DeletebyId(string id,string accountId)=>await _shippingAddresses.DeleteOneAsync(e => e.Id == id&&e.AccountId==accountId);
+ 
 
         public async Task<List<ShippingAddress>> GetAll(string accountId)
         {
@@ -37,7 +34,10 @@ namespace Backend_WebLaptop.Respository
         {
             if (!await ValidateDataAsync(entity))
                 throw new Exception("Invalid data");
-
+            //check xem có địa chỉ nào của mình có sdt đó chưa
+            var exist = _shippingAddresses.FindSync(e => e.Phone == entity.Phone).FirstOrDefault();
+            if (exist != null)
+                throw new Exception("Đã có địa chỉ với số điện thoại này trước đó");
             await _shippingAddresses!.InsertOneAsync(entity);
             return entity;
         }
@@ -45,12 +45,11 @@ namespace Backend_WebLaptop.Respository
         public async Task<bool> Update(ShippingAddress entity)
         {
             if (entity.Id == null)
-                return false;
+                throw new Exception("Invalid data");
             var current = await GetbyId(entity.Id);
             if (current != null)
             {
                 entity.WardId ??= current.WardId;
-                entity.AccountId ??= current.AccountId;
                 entity.Address ??= current.Address;
                 entity.Fullname ??= current.Fullname;
                 //nếu không tồn tại Wardid thì không thực hiện update
@@ -61,7 +60,7 @@ namespace Backend_WebLaptop.Respository
                 }
                 throw new Exception("Invalid data");
             }
-            return false;
+            throw new Exception("Invalid data");
         }
         private async Task<bool> ValidateDataAsync(ShippingAddress entity)
         {
@@ -72,5 +71,6 @@ namespace Backend_WebLaptop.Respository
             return ward != null;
         }
         static bool Isphone(Int32 phone) => phone < 999999999 && phone > 300000000;//đầu 03 đến 09
+
     }
 }

@@ -17,6 +17,7 @@ namespace Backend_WebLaptop.Controllers
         }
         [HttpGet]
         [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
         public async Task<ActionResult> Get()
         {
             try
@@ -35,6 +36,7 @@ namespace Backend_WebLaptop.Controllers
         }
         [HttpPost("add")]
         [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
         public async Task<ActionResult> Insert_new( CartItem item)
         {
             try
@@ -49,14 +51,41 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<bool> { Message=ex.Message,Result=false});
             }
         }
-        [HttpPost("remove")]
-        public async Task<ActionResult> Remove_item(string accountid, CartItem item)
+       
+        [HttpPatch]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task<ActionResult> UpdateOne(CartItem cartItem)
         {
             try
             {
-                return await _i.DeleteItem(item, accountid)
-                    ? StatusCode(200, new ResponseApi<string> { Message = "Success" }.Format())
-                    : StatusCode(400, new ResponseApi<string> { Message = "Failed" }.Format());
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                await _i.UpdateCart(cartItem, accounId,false);
+                return StatusCode(200, new ResponseApi<bool>
+                {
+                    Result = true,
+                    Message="Updated"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+        }
+        [HttpPatch("delete-item")]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task<ActionResult> DeleteOneItem(CartItem cartItem)
+        {
+            try
+            {
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                await _i.UpdateCart(cartItem, accounId, true);
+                return StatusCode(200, new ResponseApi<bool>
+                {
+                    Result = true,
+                    Message = "Updated"
+                });
             }
             catch (Exception ex)
             {
@@ -64,38 +93,24 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [HttpDelete]
-        public async Task<ActionResult> DeleteCart(string userid)
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task<ActionResult> EmptyCart()
         {
             try
             {
-                var isSuccess = await _i.EmptyCart(userid);
-                return StatusCode(200, new ResponseApi<string>
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                await _i.EmptyCart(accounId);
+                return StatusCode(200, new ResponseApi<bool>
                 {
-                    Message = isSuccess ? "Success" : "Failed"
-                }.Format());
+                    Result = true,
+                    Message = "Success"
+                });
             }
-            catch
+            catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
             }
         }
-       /* [HttpPatch]
-        public async Task<ActionResult> UpdateOne(CartItem cartItem)
-        {
-            try
-            {
-                var isSuccess = await _i.EmptyCart(userid);
-                return StatusCode(200, new ResponseApi<string>
-                {
-                    Message = isSuccess ? "Success" : "Failed"
-                }.Format());
-            }
-            catch
-            {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
-            }
-        }*/
     }
 }

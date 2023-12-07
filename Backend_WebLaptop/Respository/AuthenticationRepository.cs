@@ -9,6 +9,7 @@ using MongoDB.Driver;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using UAParser;
 
 namespace Backend_WebLaptop.Respository
 {
@@ -24,12 +25,14 @@ namespace Backend_WebLaptop.Respository
             _sercretKey = authenticationConfig.Value.SecretKey;
         }
 
+        
+
         Task<bool> IAuthenticationRepository.CheckValidToken(string jwttoken)
         {
             throw new NotImplementedException();
         }
 
-        async Task<string> IAuthenticationRepository.Createtoken(Account entity)
+        public async Task<string> Createtoken(Account entity, string browser, string ipaddress)
         {
             var account = await _accounts.FindSync(e => e.Username == entity.Username && e.Password == entity.Password).FirstOrDefaultAsync() 
                 ?? throw new Exception("Sai tên đăng nhập hoặc mật khẩu");
@@ -56,7 +59,16 @@ namespace Backend_WebLaptop.Respository
               expires: DateTime.UtcNow.AddYears(1),//thời hạn 1 năm
               signingCredentials: signIn);
             var result = new JwtSecurityTokenHandler().WriteToken(token);
-            await _session.Insert(new Session { AccounId = account.Id, IpAddress = null, Value = result });
+
+            //Thêm thông tin phiên đăng nhập
+            var parser = Parser.GetDefault();
+            var clientInfo = parser.Parse(browser);
+
+            if (clientInfo != null)
+            {
+                browser = clientInfo.UA + " on " + clientInfo.OS +$"({ipaddress})";
+            }
+            await _session.Insert(new Session { AccounId = account.Id, IpAddress = browser, Value = result });
             return result;
         }
     }
