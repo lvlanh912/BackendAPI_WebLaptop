@@ -28,10 +28,18 @@ namespace Backend_WebLaptop.Respository
             _shippingaddress = shippingaddress;
 
         }
-
+        //Kiểm tra đơn hàng
         public async Task<Order> Checkout(Order entity)
         {
-            throw new Exception("");
+            //thêm trạng thái đơn hàng
+            var Order = await Validate(entity, false);
+            {
+                Order.Total = await Gettoltal(entity.Items);
+                Order.CreateAt = DateTime.Now;
+                //Có voucher
+                Order.Paid = Order.Voucher != null ? await DecreaseByVoucher(Order.Items, Order.Voucher.Code!, Order.Total) : Order.Total;
+            }
+            return Order;
         }
 
         public async Task<PagingResult<Order>> GetAllOrders(string? accountid, int? status,
@@ -41,7 +49,7 @@ namespace Backend_WebLaptop.Respository
             //Fillter
             var filter = Builders<Order>.Filter;
             var builderFilter = filter.Empty;
-            var project = Builders<Order>.Projection.Slice("Status", -1);
+            //var project = Builders<Order>.Projection.Slice("Status", -1);
             //&= là toán tử and
             if (accountid != null)
                 builderFilter &= filter.Eq(e => e.AccountId, accountid);
@@ -61,12 +69,12 @@ namespace Backend_WebLaptop.Respository
             //Sort
             orders = sort switch
             {
-                "date_desc" => orders.OrderByDescending(e => e.CreateAt).ToList(),
+                "date" => orders.OrderBy(e => e.CreateAt).ToList(),
                 "ispaid" => orders.OrderBy(e => e.IsPaid).ToList(),
                 "ispaid_desc" =>    orders.OrderByDescending(e => e.IsPaid).ToList(),
                 "total"=> orders.OrderBy(e => e.Total).ToList(),
                 "total_desc" => orders.OrderByDescending(e => e.Total).ToList(),
-                _ => orders.OrderBy(e=>e.CreateAt).ToList(),
+                _ => orders.OrderByDescending(e=>e.CreateAt).ToList(),
                
 
             } ;
@@ -131,8 +139,6 @@ namespace Backend_WebLaptop.Respository
                 update= update.Set(e => e.Status, new Shipping((int)status));
             var rs= await  _orders.UpdateOneAsync(filter:e=>e.Id==id,update);
             return rs.ModifiedCount > 0;
-               
-
         }
 
         async Task<Order> Validate(Order entity,bool byAdmin)
@@ -157,8 +163,15 @@ namespace Backend_WebLaptop.Respository
             //kiểm tra phương thức thanh toán
             if (entity.PaymentMethod != null )
             {
-                var payment = await _payments.GetbyId(entity.PaymentMethod.Id!) ?? throw new Exception("Phương thức thanh toán không hợp lệ");
-                entity.PaymentMethod = payment;
+                //nếu phương thức thanh toán là phương thức thanh toán khi nhận hàng trong collections payment
+                if (entity.PaymentMethod.Id == "6560602d2a79e5d1c1b3905b")
+                    entity.PaymentMethod = null;
+                else
+                {
+                    var payment = await _payments.GetbyId(entity.PaymentMethod.Id!) ?? throw new Exception("Phương thức thanh toán không hợp lệ");
+                    if (!payment.Active) throw new Exception("Phương thức thanh toán không hoạt động");
+                    entity.PaymentMethod = payment;
+                }
             }
 
             //Kiểm tra voucher
@@ -170,7 +183,7 @@ namespace Backend_WebLaptop.Respository
                 //kiểm tra voucher đã được sử dụng trước đó chưa
                 if (entity.AccountId != null)
                 {
-                    var result = await _orders.FindSync(e => e.Voucher != null && e.Voucher.Code == entity.Voucher.Code).FirstOrDefaultAsync();
+                    var result = await _orders.FindSync(e =>e.AccountId==entity.AccountId && e.Voucher != null && e.Voucher.Code == entity.Voucher.Code).FirstOrDefaultAsync();
                     if (result != null) throw new Exception("Mã giảm giá đã từng được sử dụng trước đó");
                 }
                    
@@ -201,7 +214,7 @@ namespace Backend_WebLaptop.Respository
                 throw new Exception("Voucher không thể sử dụng");
             var total_for_decrease = 0;//tổng giá trị của sản phẩm được giảm giá
             //trường hợp voucher giới hạn sản phẩm
-            if (voucher.Products != null && voucher.Products.Count >= 0)
+            if (voucher.Products != null && voucher.Products.Count > 0)
                 foreach (var item in OrderItems)
                 {
                     if (voucher.Products.Contains(item.Product!.Id!))
@@ -211,7 +224,7 @@ namespace Backend_WebLaptop.Respository
                 total_for_decrease = Total;
             var remaining_no_decrease = Total - total_for_decrease;//số tiền còn lại 
             //kiểm tra đã đạt đơn tối thiểu để sử dụng voucher chưa
-            if (voucher.MinApply != null && total_for_decrease < voucher.MinApply)
+            if (voucher.MinApply != null)
                 if (total_for_decrease < voucher.MinApply)
                     throw new Exception("Đơn hàng chưa đủ điều kiện sử dụng Voucher");
             double result;
@@ -228,10 +241,7 @@ namespace Backend_WebLaptop.Respository
 
         }
 
-        public Task<Order> CheckOrder(Order entity)
-        {
-            throw new NotImplementedException();
-        }
+       
 
         public async Task<Order> GetOrderbyId(string id)
         {
@@ -248,6 +258,27 @@ namespace Backend_WebLaptop.Respository
         {
             var filter = Builders<Order>.Filter.Eq(e => e.Status!.Code, 1);
             return await _orders.CountDocumentsAsync(filter);
+        }
+
+
+        public async Task<PagingResult<Order>> GetMyOrder(string accountId, int? type, int pagesize, int pageindex)
+        {
+            var result = type == null ?
+               await _orders.FindSync(e => e.AccountId == accountId).ToListAsync() :
+                type switch
+                {
+                    0 => await _orders.FindSync(e => e.AccountId == accountId && e.Status!.Code == 0).ToListAsync(),
+                    3=> await _orders.FindSync(e => e.AccountId == accountId && e.Status!.Code == 3).ToListAsync(),
+                    2 => await _orders.FindSync(e => e.AccountId == accountId && e.Status!.Code == 2).ToListAsync(),
+                    _ => await _orders.FindSync(e => e.AccountId == accountId&& e.Status!.Code==1).ToListAsync(),
+                };
+            return new PagingResult<Order>
+            {
+                Items = result.OrderByDescending(e => e.CreateAt).Skip((pageindex-1) * pagesize).Take(pagesize),
+                TotalCount = result.Count,
+                PageIndex = pageindex,
+                PageSize = pagesize,
+            };
         }
     }
 }

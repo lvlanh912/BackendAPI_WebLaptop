@@ -28,6 +28,9 @@ namespace Backend_WebLaptop.Respository
             return true;
         }
 
+        public async Task<List<Payment>> GetActivePayment() => await _payments.FindSync(e => e.Active).ToListAsync();
+       
+
         public async Task<List<Payment>> GetAll() => await _payments.FindSync(e => true).ToListAsync();
 
         public async Task<Payment> GetbyId(string id) => await _payments.FindSync(e => e.Id == id).FirstOrDefaultAsync();
@@ -40,13 +43,8 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<bool> Update(Payment entity)
         {
-            var curent = await GetbyId(entity.Id!);
-            if (curent == null)
-            {
-                throw new Exception("This record does not exist");
-            }
+            var curent = await GetbyId(entity.Id!) ?? throw new Exception("This record does not exist");
             entity.Name ??= curent.Name;
-            entity.Active ??= curent.Active;
             var rs = await _payments.FindOneAndReplaceAsync(x => x.Id == entity.Id, entity);
             return rs != null;
         }

@@ -1,5 +1,6 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
@@ -22,6 +23,29 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _i.GetAll()
             });
         }
+
+
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpGet("list-payments")]
+        public async Task<ActionResult> GetPaymentActive()
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<List<Payment>>
+                {
+                    Message = "Success",
+                    Result = await _i.GetActivePayment()
+                });
+            }
+           
+              catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+        }
+
+
         [HttpPost]
         public async Task<ActionResult> Insert_new(Payment entity)
         {
@@ -33,10 +57,9 @@ namespace Backend_WebLaptop.Controllers
                     Result = await _i.Insert(entity)
                 });
             }
-            catch
+            catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
             }
         }
         [HttpPut("{id}")]

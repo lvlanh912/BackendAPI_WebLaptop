@@ -27,5 +27,7 @@ namespace Backend_WebLaptop.IRespository
         Task<long> Get_CountPending();
 
         Task<Order> Checkout(Order entity);
+
+        Task<PagingResult<Order>> GetMyOrder(string accountId,int? type, int pagesize , int pageindex);
     }
 }

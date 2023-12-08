@@ -5,6 +5,7 @@ namespace Backend_WebLaptop.IRespository
     public interface IPaymentRepository
     {
         Task<List<Payment>> GetAll();
+        Task<List<Payment>> GetActivePayment();
         Task<Payment> GetbyId(string id);
         Task<bool> DeletebyId(string id);
         Task<Payment> Insert(Payment entity);

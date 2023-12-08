@@ -1,5 +1,6 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
@@ -21,7 +22,7 @@ namespace Backend_WebLaptop.Controllers
             return StatusCode(200, new ResponseApi<PagingResult<Order>>
             {
                 Message = "Success",
-                Result = await _i.GetAllOrders(accountid, status, isPaid, paymentId, minPaid, maxPaid, startdate, enddate,sort??"date", pagesize, pageindex)
+                Result = await _i.GetAllOrders(accountid, status, isPaid, paymentId, minPaid, maxPaid, startdate, enddate,sort??"date_desc", pagesize, pageindex)
             });
         }
         [HttpGet("sum-pending")]
@@ -56,28 +57,6 @@ namespace Backend_WebLaptop.Controllers
                     Message = "Đặt hàng thành công"
 
                 }) ;
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new ResponseApi<string>
-                {
-                    Message = ex.Message
-                });
-            }
-        }
-        //role admin or role user
-        [HttpPost("checkin")]
-        public async Task<ActionResult> Checkin(Order entity)
-        {
-            try
-            {
-                //gán entity.id=token request
-                return StatusCode(201, new ResponseApi<string>
-                {
-                    Result ="",
-                    Message = "Success"
-
-                });
             }
             catch (Exception ex)
             {
@@ -123,5 +102,79 @@ namespace Backend_WebLaptop.Controllers
             }
         }
 
+
+        [HttpPost("checkout")]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task<ActionResult> CheckOut(Order entity)
+        {
+            try
+            {
+                var accountId = HttpContext.User.FindFirst("Id")!.Value;
+                entity.AccountId = accountId;
+                //gán entity.id=token request
+                return StatusCode(200, new ResponseApi<Order>
+                {
+                    Result = await _i.Checkout(entity),
+                    Message = "Success"
+
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                });
+            }
+        }
+        
+        [HttpPost("create-order")]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task<ActionResult> CreateOrder(Order entity)
+        {
+            try
+            {
+                var accountId = HttpContext.User.FindFirst("Id")!.Value;
+                entity.AccountId = accountId;
+                return StatusCode(201, new ResponseApi<Order>
+                {
+                    Result = await _i.CreateOrder(entity, false),
+                    Message = "Đặt hàng thành công"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("my-orders")]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task<ActionResult> GetMyOrder(int? type, int pagesize = 25, int pageindex = 1)
+        {
+            try
+            {
+                var accountId = HttpContext.User.FindFirst("Id")!.Value;
+                
+                return StatusCode(200, new ResponseApi<PagingResult<Order>>
+                {
+                    Result = await _i.GetMyOrder(accountId, type,pagesize,pageindex),
+                    Message = "Thành công"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                });
+            }
+        }
     }
 }
