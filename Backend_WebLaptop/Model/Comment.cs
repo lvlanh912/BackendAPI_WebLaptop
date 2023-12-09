@@ -14,6 +14,6 @@ namespace Backend_WebLaptop.Model
         [BsonRepresentation(BsonType.ObjectId)]
         public string? AccountId { get; set; }
         public string? Conntent { get; set; }
-        public DateTime? CreateAt { get; set; }
+        public DateTime CreateAt { get; set; } = DateTime.Now;
     }
 }

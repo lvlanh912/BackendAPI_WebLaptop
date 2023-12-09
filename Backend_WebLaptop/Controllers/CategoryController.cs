@@ -136,5 +136,26 @@ namespace Backend_WebLaptop.Controllers
                 });
             }
         }
+
+        [HttpGet("get-same-categories")]
+        public async Task<ActionResult> GetlistCategorySameLever(string categoryID)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<List<Category>>
+                {
+                    Message = "Success",
+                    Result = await _i.GetListSameCategory(categoryID)
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool>
+                {
+                    Message = ex.Message,
+                    Result = false
+                });
+            }
+        }
     }
 }

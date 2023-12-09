@@ -11,10 +11,12 @@ namespace Backend_WebLaptop.Respository
     {
         private readonly IMongoCollection<Comment> _comments;
         private readonly IAccountRepository _accounts;
+        private readonly IOrderRepository _orders;
         private readonly IProductRepository _products;
-        public CommentRepository(IDatabaseService databaseService, IAccountRepository accounts, IProductRepository products)
+        public CommentRepository(IDatabaseService databaseService, IAccountRepository accounts, IOrderRepository orders,IProductRepository products)
         {
             _comments = databaseService.Get_Comments_Collection();
+            _orders = orders;
             _accounts = accounts;
             _products = products;
         }
@@ -61,38 +63,33 @@ namespace Backend_WebLaptop.Respository
         public async Task<long> GetTotalCreatebyTime(DateTime start, DateTime end)=> await _comments.CountDocumentsAsync(e => e.CreateAt >= start && e.CreateAt <= end);
 
 
-        public async Task<bool> Insert(Comment entity)
+        public async Task<Comment> Insert(Comment entity)
         {
-            if (await ValidateData(entity))
-            {
-                entity.CreateAt = DateTime.Now;
-                await _comments.InsertOneAsync(entity);
-                return true;
-            }
-            return false;
+            await ValidateData(entity);
+            //kiểm tra đã mua sản phẩm này chưa
+            if(!await _orders.IsBought(entity.ProductId!, entity.AccountId!))
+                throw new Exception("Bạn không thể đánh giá sản phẩm này do chưa hoàn thành mua hàng");
+            //kiểm tra đã có đánh giá trước đó chưa
+            var comment = await _comments.FindSync(e => e.ProductId == entity.ProductId && e.AccountId == entity.AccountId).FirstOrDefaultAsync();
+            if (comment is not null)
+                throw new Exception("Bạn đã đánh giá sản phẩm này trước đó rồi");
+            await _comments.InsertOneAsync(entity);
+            return entity;
         }
         public async Task<bool> Update(Comment entity)
         {
-            if (await ValidateData(entity))
-            {
-                entity.CreateAt = DateTime.Now;
-                await _comments.FindOneAndReplaceAsync(e => e.Id == entity.Id, entity);
-                return true;
-            }
-            return false;
-        }
-        async Task<bool> ValidateData(Comment entity)
-        {
-            List<bool> result = new()
-            {
-               entity.AccountId!=null&& await _accounts.Exits(entity.AccountId),
-               entity.Star>1&&entity.Star<=5,
-               entity.ProductId!=null&& await _products.Exits(entity.ProductId),
-            };
-            foreach (var item in result)
-                if (item == false)
-                    return item;
+            await ValidateData(entity);
+            await _comments.FindOneAndReplaceAsync(e => e.Id == entity.Id, entity);
             return true;
+        }
+        async Task ValidateData(Comment entity)
+        {
+            if (entity.Star < 1 || entity.Star > 5)
+                throw new Exception("Chất lượng không hợp lệ");
+            if (entity.ProductId is null)
+                throw new Exception("Không tồn tại sản phẩm");
+            if(!await _products.Exits(entity.ProductId))
+                throw new Exception("Sản phẩm không hợp lệ");
         }
     }
 }

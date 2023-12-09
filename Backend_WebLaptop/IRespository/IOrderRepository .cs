@@ -29,5 +29,7 @@ namespace Backend_WebLaptop.IRespository
         Task<Order> Checkout(Order entity);
 
         Task<PagingResult<Order>> GetMyOrder(string accountId,int? type, int pagesize , int pageindex);
+
+        Task<bool> IsBought(string productId,string accountid);
     }
 }

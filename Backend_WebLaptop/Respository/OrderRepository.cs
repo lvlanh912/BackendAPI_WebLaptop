@@ -280,5 +280,16 @@ namespace Backend_WebLaptop.Respository
                 PageSize = pagesize,
             };
         }
+
+        public async Task<bool> IsBought(string productId,string accountid)
+        {
+            var filter = Builders<Order>.Filter.And(
+                Builders<Order>.Filter.Eq(e => e.AccountId, accountid),
+                Builders<Order>.Filter.Eq(e => e.Status!.Code, 3),//lấy đơn hàng đã thành công
+                Builders<Order>.Filter.ElemMatch(e=>e.Items,Builders<OrderItem>.Filter.Eq(e=>e.Product!.Id, productId))
+                );
+            var result = await _orders.FindSync(filter).FirstOrDefaultAsync();
+            return result is not null;
+        }
     }
 }

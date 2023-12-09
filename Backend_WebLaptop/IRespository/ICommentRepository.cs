@@ -8,7 +8,7 @@ namespace Backend_WebLaptop.IRespository
         Task<PagingResult<Comment>> GetAll( string? accountid,string? productId,string? keywords,string sort,int pageindex,int pagesize);
         Task<Comment> GetbyId(string id);
         Task<bool> DeletebyId(string id);
-        Task<bool> Insert(Comment entity);
+        Task<Comment> Insert(Comment entity);
         Task<bool> Update(Comment entity);
         Task<long> GetTotalCreatebyTime(DateTime start, DateTime end);
     }

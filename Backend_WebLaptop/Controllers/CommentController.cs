@@ -1,5 +1,6 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
@@ -51,23 +52,26 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
             }
         }
+
+        //Thêm đánh giá mới
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpPost]
         public async Task<ActionResult> Insert_new(Comment entity)
         {
             try
             {
-                string productId = this.RouteData.Values["ProductId"]!.ToString()!;
-                entity.ProductId = productId;
-                return StatusCode(201, new ResponseApi<bool>
+                var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                entity.AccountId = accounId;
+                return StatusCode(201, new ResponseApi<Comment>
                 {
-                    Message = "Created",
+                    Message = "Thành công",
                     Result = await _i.Insert(entity)
                 }); ;
             }
-            catch
+            catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
             }
         }
         [HttpPut("{id}")]

@@ -157,5 +157,12 @@ namespace Backend_WebLaptop.Respository
         {
             return await _categories.FindSync(e => e.ParentCategoryId == parentID).ToListAsync();
         }
+
+        public async Task<List<Category>> GetListSameCategory(string categoryID)
+        {
+            var parentId = _categories.FindSync(e => e.Id == categoryID).FirstOrDefault().ParentCategoryId
+                ?? throw new Exception("Not valid ParentId");
+            return await GetListChildsById(parentId);
+        }
     }
 }
