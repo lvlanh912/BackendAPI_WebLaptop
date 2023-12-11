@@ -16,5 +16,6 @@ namespace Backend_WebLaptop.IRespository
         Task<long> GetTotalCreatebyTime(DateTime start, DateTime end);
         Task UpdateImage(ImageUpload<Account> entity);
         Task Updateinfor(Account entity);
+        Task<Account> GetPublicInfor(string accountId);
     }
 }

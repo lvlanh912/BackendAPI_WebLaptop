@@ -11,5 +11,7 @@ namespace Backend_WebLaptop.IRespository
         Task<Comment> Insert(Comment entity);
         Task<bool> Update(Comment entity);
         Task<long> GetTotalCreatebyTime(DateTime start, DateTime end);
+        Task<List<PublicComments>> GetCommentByProduct( string productId);
+
     }
 }

@@ -26,9 +26,22 @@ namespace Backend_WebLaptop.Model
 
         public Boolean? Sex { get; set; } = true;
 
-        public DateTime CreateAt { get; set; } = DateTime.Now;
+        public DateTime? CreateAt { get; set; } = DateTime.Now;
 
         [BsonRepresentation(BsonType.ObjectId)]
         public string? WardId { get; set; }
+
+       public Account GetPublicInfor()
+        {
+            this.WardId = null;
+            this.Phone = null;
+            this.Email = null;
+            this.Address = null;
+            this.Password = null;
+            this.Role = null;
+            this.Username = null;
+            this.CreateAt = null;
+            return this;
+        }
     }
 }

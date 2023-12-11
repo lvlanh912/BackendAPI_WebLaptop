@@ -30,7 +30,7 @@ namespace Backend_WebLaptop.Respository
             foreach (var item in items)
             {
                 var update = Builders<Product>.Update.Inc(e => e.Sold, item.Quantity).Inc(e => e.Stock, -item.Quantity);
-                task.Add(_products.FindOneAndUpdateAsync(e => e.Id == item.Product.Id, update));
+                task.Add(_products.FindOneAndUpdateAsync(e => e.Id == item.Product!.Id, update));
             }
             await Task.WhenAll(task);
             return true;
@@ -129,12 +129,12 @@ namespace Backend_WebLaptop.Respository
         {
             var curent = await _products.FindSync(e =>e.Id == entity.Data!.Id).FirstOrDefaultAsync();
             entity.Data!.CreateAt = curent.CreateAt;
-            entity.Data.Sold = (entity.Data.Sold <= 0 ? curent.Sold : entity.Data.Sold);
+            entity.Data.Sold = (entity.Data.Sold < 0 ? curent.Sold : entity.Data.Sold);
             entity.Data.Price = (entity.Data.Price <= 1000 ? curent.Price : entity.Data.Price);
             entity.Data.MaxPrice = (entity.Data.MaxPrice <= 1000 ? curent.MaxPrice : entity.Data.MaxPrice);
             entity.Data.View = (entity.Data.View <= 0 ? curent.View : entity.Data.View);
             entity.Data.Categories = (entity.Data.Categories == null || entity.Data.Categories.Count == 0) ? curent.Categories : entity.Data.Categories;
-            entity.Data.Stock = entity.Data.Stock <= 0 ? curent.Stock : entity.Data.Stock;
+            entity.Data.Stock = entity.Data.Stock < 0 ? curent.Stock : entity.Data.Stock;
             entity.Data.Weight = entity.Data.Weight <= 0 ? curent.Weight : entity.Data.Weight;
             entity.Data.BrandName = String.IsNullOrWhiteSpace(entity.Data.BrandName) ? curent.BrandName : entity.Data.BrandName;
             entity.Data.Special = (entity.Data.Special == null || entity.Data.Special.Count == 0) ? curent.Special : entity.Data.Special;

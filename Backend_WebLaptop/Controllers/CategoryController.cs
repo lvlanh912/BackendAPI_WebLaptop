@@ -1,5 +1,6 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
@@ -13,7 +14,6 @@ namespace Backend_WebLaptop.Controllers
         {
             _i = i;
         }
-        //admin
         [HttpGet]
         public async Task<ActionResult> GetList_Category(string? keywords, string? sort, int pageindex = 1, int pagesize = 25)
         {
@@ -23,7 +23,7 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _i.GetAll(null,keywords,sort??"name",pageindex,pagesize)
             });
         }
-        //admin
+        [Authorize(Roles = "Admin")]
         [HttpGet("getbyname")]
         public async Task<ActionResult> FindCategorybyName(string name)
         {
@@ -33,7 +33,6 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _i.GetAllCategorybyName(name)
             });
         }
-        //admin
         [HttpGet("{ParentCategoryId}")]
         public async Task<ActionResult> GetListChildsById(string ParentCategoryId, string? keywords, string? sort, int pageindex=1, int pagesize=25)
         {
@@ -44,7 +43,6 @@ namespace Backend_WebLaptop.Controllers
             });
 
         }
-        //admin
         [HttpGet("getbyId")]
         public async Task<ActionResult> GetbyId(string id)
         {
@@ -62,7 +60,7 @@ namespace Backend_WebLaptop.Controllers
             }
            
         }
-        //admin
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult> Insert_new(Category entity)
         {
@@ -79,7 +77,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(ex.Message);
             }
         }
-        //admin
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(string id, Category entity)
         {
@@ -98,7 +96,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<string> { Message=ex.Message,Result= "Failed" });
             }
         }
-        //admin
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {

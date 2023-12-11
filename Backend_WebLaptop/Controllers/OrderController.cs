@@ -15,7 +15,7 @@ namespace Backend_WebLaptop.Controllers
             _i = i;
         }
         [HttpGet]
-        //role admin
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult> Get(string? accountid, int? status,bool? isPaid, string? paymentId,
             int? minPaid, int? maxPaid,DateTime? startdate, DateTime? enddate, string? sort, int pagesize = 25, int pageindex = 1 )
         {
@@ -25,6 +25,7 @@ namespace Backend_WebLaptop.Controllers
                 Result = await _i.GetAllOrders(accountid, status, isPaid, paymentId, minPaid, maxPaid, startdate, enddate,sort??"date_desc", pagesize, pageindex)
             });
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("sum-pending")]
         public async Task<ActionResult> GetPendingOrder()
         {
@@ -43,7 +44,7 @@ namespace Backend_WebLaptop.Controllers
             
            
         }
-        //role admin or role user
+        [Authorize(Roles = "Admin")]
         [HttpPost("create")]
         public async Task<ActionResult> Insert_new(Order entity)
         {
@@ -66,6 +67,7 @@ namespace Backend_WebLaptop.Controllers
                 });
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         //role admin
         public async Task<ActionResult> DeleteOrder(string id)
@@ -86,6 +88,7 @@ namespace Backend_WebLaptop.Controllers
                 }) ;
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         //role Admin
         public async Task<ActionResult> Edit(string id,int ? status,ShippingAddress? shippingAddress,bool? ispaid )

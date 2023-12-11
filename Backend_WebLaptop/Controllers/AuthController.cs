@@ -2,6 +2,7 @@
 using Backend_WebLaptop.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace Backend_WebLaptop.Controllers
 {
@@ -38,7 +39,23 @@ namespace Backend_WebLaptop.Controllers
 
                 var ip = HttpContext.Connection.RemoteIpAddress?.MapToIPv4()?.ToString(); ;
                 var browser = HttpContext.Request.Headers.UserAgent;
-                var result = await _auth.Createtoken(account, browser, ip ?? "");
+                var result = await _auth.Createtoken(account, browser, ip ?? "", 1);
+                return StatusCode(201, new ResponseApi<string> { Message = "Đăng nhập thành công", Result = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<string> { Message = $"Đăng nhập thất bại: {ex.Message}" });
+            }
+        }
+        [HttpPost("admin/sign-in")]
+        public async Task<ActionResult> SignInAdmin(Account account)
+        {
+            try
+            {
+
+                var ip = HttpContext.Connection.RemoteIpAddress?.MapToIPv4()?.ToString(); ;
+                var browser = HttpContext.Request.Headers.UserAgent;
+                var result = await _auth.Createtoken(account, browser, ip ?? "", 2);
                 return StatusCode(201, new ResponseApi<string> { Message = "Đăng nhập thành công", Result = result });
             }
             catch (Exception ex)

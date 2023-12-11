@@ -32,12 +32,11 @@ namespace Backend_WebLaptop.Respository
             throw new NotImplementedException();
         }
 
-        public async Task<string> Createtoken(Account entity, string browser, string ipaddress)
+        public async Task<string> Createtoken(Account entity, string browser, string ipaddress,int role)
         {
-            var account = await _accounts.FindSync(e => e.Username == entity.Username && e.Password == entity.Password).FirstOrDefaultAsync() 
+            var account = await _accounts.FindSync(e => e.Username == entity.Username && e.Password == entity.Password &&e.Role==role).FirstOrDefaultAsync() 
                 ?? throw new Exception("Sai tên đăng nhập hoặc mật khẩu");
-            if (account.Role == 0)
-                throw new Exception("Tài khoản bị vô hiệu hoá");
+          
             //cấp token
             //lấy thông tin để mã hoá vào token
             var claims = new[] {

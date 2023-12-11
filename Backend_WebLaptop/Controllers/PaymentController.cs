@@ -14,6 +14,7 @@ namespace Backend_WebLaptop.Controllers
         {
             _i = i;
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult> GetList_Payment()
         {
@@ -45,7 +46,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult> Insert_new(Payment entity)
         {
@@ -62,6 +63,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(string id, Payment entity)
         {
@@ -74,12 +76,12 @@ namespace Backend_WebLaptop.Controllers
                     Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
-            catch
+            catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {
@@ -91,10 +93,9 @@ namespace Backend_WebLaptop.Controllers
                     Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
-            catch
+            catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
             }
         }
     }

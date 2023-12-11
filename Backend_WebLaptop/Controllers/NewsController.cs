@@ -1,5 +1,6 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -14,6 +15,7 @@ namespace Backend_WebLaptop.Controllers
         {
             _i = i;
         }
+
         [HttpGet("{id}")]
         public async Task<ActionResult> Get_Post(string id)
         {
@@ -49,7 +51,8 @@ namespace Backend_WebLaptop.Controllers
             }
 
         }
-
+        
+        [Authorize(Roles = "Admin")]
         [HttpGet("sum-create")]
         public async Task<ActionResult> GetTotalCreate(DateTime? start, DateTime? end)
         {
@@ -67,7 +70,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
             }
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult> Add([FromForm] string data, List<IFormFile>? images)
         {
@@ -92,6 +95,7 @@ namespace Backend_WebLaptop.Controllers
                 });
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {
@@ -106,6 +110,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<string> { Message = ex.Message }.Format());
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update([FromForm] string data, List<IFormFile>? images)
         {

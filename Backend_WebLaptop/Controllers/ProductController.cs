@@ -1,5 +1,6 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -34,6 +35,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("sum-out-stock")]
         public async Task<ActionResult> GetTotalOutStock()
         {
@@ -52,7 +54,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
 
-            [HttpGet("search")]
+        [HttpGet("search")]
         public async Task<ActionResult> Get_Products_keyword(string keywords)
         {
             try
@@ -82,9 +84,9 @@ namespace Backend_WebLaptop.Controllers
                     Result = await _i.GetbyId(id)
                 });
             }
-            catch
+            catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
             }
         }
         [HttpPost("view")]
@@ -98,14 +100,12 @@ namespace Backend_WebLaptop.Controllers
                     Result = true
                 });
             }
-            catch
+            catch (Exception ex)
             {
-                return BadRequest( new ResponseApi<bool>
-                {
-                    Result = false
-                });
+                return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult> Insert_new([FromForm] string data, List<IFormFile>? images)
         {
@@ -130,6 +130,8 @@ namespace Backend_WebLaptop.Controllers
                 
             }
         }
+        
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update([FromForm]string data, List<IFormFile>? images)
         {
@@ -152,6 +154,7 @@ namespace Backend_WebLaptop.Controllers
                 });
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {
@@ -163,27 +166,9 @@ namespace Backend_WebLaptop.Controllers
                     Message = isSuccess ? "Success" : "Failed"
                 }.Format());
             }
-            catch
-            {
-                // Console.WriteLine(e.Message);
-                return BadRequest();
-            }
-        }
-        [HttpPost("giam-sp")]
-        public async Task<ActionResult> Descrease(List<OrderItem> entity)
-        {
-            try
-            {
-                var rs = await _i.DecreaseQuantity(entity);
-                return StatusCode(200, new ResponseApi<string>
-                {
-                    Message = rs ? "Success" : "Failed"
-                }.Format());
-            }
             catch (Exception ex)
             {
-                // Console.WriteLine(e.Message);
-                return BadRequest(ex.Message);
+                return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
             }
         }
     }

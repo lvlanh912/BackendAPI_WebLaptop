@@ -24,7 +24,9 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173/");
+            policy.AllowAnyMethod();
+            policy.AllowAnyOrigin();
+            policy.WithOrigins("http://localhost:5173");
         });
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -42,6 +44,7 @@ builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
 builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+builder.Services.AddScoped<IStatisticRepository, StatisticRepository>();
 //Đăng ký dịch vụ kiểm tra session
 builder.Services.AddScoped<SessionAuthor>();
 //builder.Services.AddScoped<IStatusOrderingRepository, StatusOrderingRepository>();

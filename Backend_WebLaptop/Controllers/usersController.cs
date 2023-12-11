@@ -23,7 +23,8 @@ namespace Backend_WebLaptop.Controllers
             _cart = cart;
             _session = session;
         }
-        //[Authorize(Roles = "Admin")]//theo role
+        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpGet]
         public async Task<ActionResult> Getall(string? keywords,string? type, DateTime? startdate, DateTime? enddate, int? role, bool? gender, string? sort, int pageIndex = 1, int pageSize = 5)
         {
@@ -40,7 +41,8 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(ex.Message);
             }
         }
-        //admin
+        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpGet("{id}")]
         public async Task<ActionResult> GetById(string id)
         {
@@ -53,12 +55,13 @@ namespace Backend_WebLaptop.Controllers
                     Message = rs != null ? "Success" : "Invalid user"
                 });
             }
-            catch
+            catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest(new ResponseApi<string> { Message = ex.Message });
             }
         }
-        //admin
+        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpGet("total-orders")]
         public async Task<ActionResult> GetTotalOrder (string id)
         {
@@ -71,12 +74,13 @@ namespace Backend_WebLaptop.Controllers
                     
                 });
             }
-            catch
+            catch (Exception ex)
             {
-                return BadRequest(new ResponseApi<bool> { Result=false});
+                return BadRequest(new ResponseApi<string> { Message = ex.Message });
             }
         }
-        //admin
+        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpGet("total-comments")]
         public async Task<ActionResult> GetTotalComment(string id)
         {
@@ -89,12 +93,13 @@ namespace Backend_WebLaptop.Controllers
 
                 });
             }
-            catch
+            catch (Exception ex)
             {
-                return BadRequest(new ResponseApi<bool> { Result = false });
+                return BadRequest(new ResponseApi<string> { Message = ex.Message });
             }
         }
-        //admin
+        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpPost]
         public async Task<ActionResult> Add([FromForm] string data, List<IFormFile>? images)
         {
@@ -113,7 +118,8 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<string> { Message = ex.Message });
             }
         }
-        //admin
+        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update([FromForm] string data, List<IFormFile>? images)
         {
@@ -133,8 +139,8 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest( new ResponseApi<string> { Message=ex.Message});
             }
         }
-        //admin
-        //[Authorize(Roles = "admin")]//theo role
+        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {
@@ -148,7 +154,8 @@ namespace Backend_WebLaptop.Controllers
                 return NotFound();
             }
         }
-        //admin
+        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpGet("sum-create")]
         public async Task<ActionResult> GetTotalCreate(DateTime? start,DateTime? end)
         {
@@ -265,7 +272,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         
-        [Authorize(Roles = "Member")]
+        [Authorize]
         [ServiceFilter(typeof(SessionAuthor))]
         [HttpDelete("logout")]
         public async Task<ActionResult> Logout()
@@ -278,6 +285,24 @@ namespace Backend_WebLaptop.Controllers
                 {
                     Message = "thành công",
                     Result = true
+
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+        }
+
+        [HttpGet("userinfor")]
+        public async Task<ActionResult> GetUserInfor(string accountId)
+        {
+            try
+            {
+                return StatusCode(200, new ResponseApi<Account>
+                {
+                    Message = "thành công",
+                    Result = await _i.GetPublicInfor(accountId)
 
                 });
             }

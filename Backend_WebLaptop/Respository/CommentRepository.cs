@@ -10,14 +10,14 @@ namespace Backend_WebLaptop.Respository
     public class CommentRepository : ICommentRepository
     {
         private readonly IMongoCollection<Comment> _comments;
-        private readonly IAccountRepository _accounts;
         private readonly IOrderRepository _orders;
+        private readonly IAccountRepository _account;
         private readonly IProductRepository _products;
-        public CommentRepository(IDatabaseService databaseService, IAccountRepository accounts, IOrderRepository orders,IProductRepository products)
+        public CommentRepository(IDatabaseService databaseService, IAccountRepository account,IOrderRepository orders,IProductRepository products)
         {
             _comments = databaseService.Get_Comments_Collection();
             _orders = orders;
-            _accounts = accounts;
+            _account = account;
             _products = products;
         }
         public async Task<bool> DeletebyId(string id)
@@ -59,6 +59,26 @@ namespace Backend_WebLaptop.Respository
     
         }
         public async Task<Comment> GetbyId(string id) => await _comments.FindSync(e => e.Id == id).FirstOrDefaultAsync();
+
+        public async Task<List<PublicComments>> GetCommentByProduct(string productId)
+        {
+            var comments=await  _comments.FindSync(e => e.ProductId == productId).ToListAsync();
+            var Listcommnent = comments is not null ? comments.OrderByDescending(e => e.CreateAt) : Enumerable.Empty<Comment>();
+            var result = Enumerable.Empty<PublicComments>().ToList();
+            var task = new List<Task<PublicComments>>();
+            foreach (var item in Listcommnent)
+            {
+                task.Add(GetPublicComments(item));
+            }
+            await Task.WhenAll(task);
+            return task.Select(e => e.Result).ToList();
+            
+        }
+        async Task<PublicComments> GetPublicComments(Comment item)
+        {
+                var publicInfo = await _account.GetPublicInfor(item.AccountId!);
+                return new PublicComments { Comment = item, AccountInfor = publicInfo };
+        }
 
         public async Task<long> GetTotalCreatebyTime(DateTime start, DateTime end)=> await _comments.CountDocumentsAsync(e => e.CreateAt >= start && e.CreateAt <= end);
 

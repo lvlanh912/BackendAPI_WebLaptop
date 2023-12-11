@@ -58,7 +58,7 @@ namespace Backend_WebLaptop.Respository
             if(startdate!=null)
                 builderFilter &= filter.Gte(e => e.CreateAt, startdate);
             if(enddate!=null)
-                builderFilter &= filter.Gte(e => e.CreateAt, startdate);
+                builderFilter &= filter.Lte(e => e.CreateAt, enddate);
             if (status != null)
                 builderFilter &= filter.Eq(e => e.Status!.Code,status );
             var orders = await _orders.FindSync(builderFilter).ToListAsync();
@@ -136,7 +136,12 @@ namespace Backend_WebLaptop.Respository
             if (ispaid != null)
                 update= update.Set(e => e.IsPaid, ispaid);
             if (status != null)
-                update= update.Set(e => e.Status, new Shipping((int)status));
+            {
+                update = update.Set(e => e.Status, new Shipping((int)status));
+                if(status==3)//nếu trạng thái đơn hàng đã hoàn thành thì tự động cập nhật trạng thái thanh toán
+                    update = update.Set(e => e.IsPaid, true);
+            }
+              
             var rs= await  _orders.UpdateOneAsync(filter:e=>e.Id==id,update);
             return rs.ModifiedCount > 0;
         }

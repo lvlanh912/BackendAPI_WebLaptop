@@ -60,7 +60,7 @@ namespace Backend_WebLaptop.Respository
             var result = new List<Category>();
             //lấy danh sách tất cả danh mục gốc (không có danh mục cha)
             if(ParentCategoryId == null)
-                 result=keywords!=null? await _categories.FindSync( e => e.Name.ToLower().Contains(keywords.ToLower())&&e.ParentCategoryId==null).ToListAsync(): await _categories.FindSync(e => e.ParentCategoryId == null).ToListAsync();
+                 result=keywords!=null? await _categories.FindSync( e => e.Name!.ToLower().Contains(keywords.ToLower())&&e.ParentCategoryId==null).ToListAsync(): await _categories.FindSync(e => e.ParentCategoryId == null).ToListAsync();
             else
                 //lấy danh sách các danh mục con 
                 result = keywords != null ? await _categories.FindSync(e =>e.ParentCategoryId== ParentCategoryId && e.Name!.Contains(keywords)).ToListAsync() : await _categories.FindSync(e => e.ParentCategoryId == ParentCategoryId).ToListAsync();

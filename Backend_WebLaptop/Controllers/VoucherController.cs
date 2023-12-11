@@ -1,5 +1,6 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend_WebLaptop.Controllers
@@ -13,6 +14,7 @@ namespace Backend_WebLaptop.Controllers
         {
             _i = i;
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult> Getall(string? keywords,DateTime? createTimeStart, DateTime? createTimeEnd, bool? active, string? sort, int pageindex = 1, int pagesize = 10)
         {
@@ -47,6 +49,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<bool> { Result = false, Message = ex.Message });
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult> Getbyid(string id)
         {
@@ -81,7 +84,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest();
             }
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult> Insert_new(Voucher entity)
         {
@@ -98,6 +101,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(string id, Voucher entity)
         {
@@ -114,6 +118,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpPost("disable")]
         public async Task<ActionResult> Disable(string voucherId)
         {
@@ -130,6 +135,7 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest();
             }
         }
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {

@@ -194,5 +194,11 @@ namespace Backend_WebLaptop.Respository
             }
             await Task.WhenAll(task);
         }
+
+        public async Task<Account> GetPublicInfor(string accountId)
+        {
+            var result =await _accounts.FindSync(e => e.Id == accountId).FirstOrDefaultAsync();
+            return result != null ? result.GetPublicInfor() : throw new Exception("Not valid user");
+        }
     }
 }
