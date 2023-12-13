@@ -160,5 +160,24 @@ namespace Backend_WebLaptop.Controllers
                 return BadRequest(new ResponseApi<string> { Message = ex.Message });
             }
         }
+/*        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]*/
+        [HttpGet("revenue")]
+        public async Task<ActionResult> GetRevenue(DateTime? startDate, DateTime? endDate)
+        {
+            try
+            {
+                
+                return StatusCode(200, new ResponseApi<object>
+                {
+                    Result = await _i.GetRevenue(startDate??DateTime.Today.AddMonths(-1), endDate??DateTime.Today),
+                    Message = "Thành công"
+                }); ;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<string> { Message = ex.Message });
+            }
+        }
     }
 }

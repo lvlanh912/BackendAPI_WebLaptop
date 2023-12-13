@@ -173,9 +173,11 @@ namespace Backend_WebLaptop.Respository
                     entity.PaymentMethod = null;
                 else
                 {
-                    var payment = await _payments.GetbyId(entity.PaymentMethod.Id!) ?? throw new Exception("Phương thức thanh toán không hợp lệ");
+                    var payment = await _payments.GetbyId(entity.PaymentMethod.Id!) ??
+                        throw new Exception("Phương thức thanh toán không hợp lệ");
                     if (!payment.Active) throw new Exception("Phương thức thanh toán không hoạt động");
-                    entity.PaymentMethod = payment;
+                        throw new Exception("Phương thức thanh toán chưa hoạt động");
+                    // entity.PaymentMethod = payment;
                 }
             }
 

@@ -15,6 +15,7 @@ namespace Backend_WebLaptop.Controllers
             _i = i;
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpGet]
         public async Task<ActionResult> GetList_Payment()
         {
@@ -47,6 +48,7 @@ namespace Backend_WebLaptop.Controllers
         }
 
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpPost]
         public async Task<ActionResult> Insert_new(Payment entity)
         {
@@ -64,6 +66,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(string id, Payment entity)
         {
@@ -82,6 +85,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {

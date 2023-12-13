@@ -16,6 +16,7 @@ namespace Backend_WebLaptop.Controllers
         }
         [HttpGet]
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         public async Task<ActionResult> Get(string? accountid, int? status,bool? isPaid, string? paymentId,
             int? minPaid, int? maxPaid,DateTime? startdate, DateTime? enddate, string? sort, int pagesize = 25, int pageindex = 1 )
         {
@@ -26,6 +27,7 @@ namespace Backend_WebLaptop.Controllers
             });
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpGet("sum-pending")]
         public async Task<ActionResult> GetPendingOrder()
         {
@@ -45,6 +47,7 @@ namespace Backend_WebLaptop.Controllers
            
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpPost("create")]
         public async Task<ActionResult> Insert_new(Order entity)
         {
@@ -68,6 +71,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpDelete("{id}")]
         //role admin
         public async Task<ActionResult> DeleteOrder(string id)
@@ -89,6 +93,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpPut("{id}")]
         //role Admin
         public async Task<ActionResult> Edit(string id,int ? status,ShippingAddress? shippingAddress,bool? ispaid )

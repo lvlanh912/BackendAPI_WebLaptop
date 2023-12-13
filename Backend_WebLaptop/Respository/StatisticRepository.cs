@@ -1,6 +1,7 @@
 ﻿using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 
@@ -19,7 +20,6 @@ namespace Backend_WebLaptop.Respository
 
         }
 
-        [Obsolete]
         public async Task<List<long>> GetOrderPerMonth(DateTime startTime, DateTime endTime)
         {
             if (endTime <= startTime)
@@ -33,14 +33,12 @@ namespace Backend_WebLaptop.Respository
             DateTime EndDayofMonth;
             for (int i= 0; i < monthCount; i++)
             {
-
-                
                 EndDayofMonth = new DateTime(FistDayofMonth.Year, FistDayofMonth.Month, DateTime.DaysInMonth(FistDayofMonth.Year, FistDayofMonth.Month)).AddDays(1).AddTicks(-1);
                 var filter = Builders<Order>.Filter.And(
                     Builders<Order>.Filter.Gte(e => e.CreateAt, FistDayofMonth),
                     Builders<Order>.Filter.Lte(e => e.CreateAt, EndDayofMonth)
                     );
-                task.Add(_order.CountAsync(filter));
+                task.Add(_order.CountDocumentsAsync(filter));
                 FistDayofMonth = FistDayofMonth.AddMonths(1);
             }
             var result = new List<long>();
@@ -125,6 +123,31 @@ namespace Backend_WebLaptop.Respository
             };
             return result;
          
+        }
+
+        public async Task<object> GetRevenue(DateTime startTime, DateTime endTime)
+        {
+            var filter = Builders<Order>.Filter.And(
+                 Builders<Order>.Filter.Gte(e => e.Status!.Code, 3),
+                 Builders<Order>.Filter.Gte(e => e.CreateAt, startTime),
+                  Builders<Order>.Filter.Lte(e => e.CreateAt, endTime)
+                );
+            var totalValue = 0;
+            var totalIncome = 0;
+            var list =await _order.FindSync(filter).ToListAsync();
+            list.ForEach(item =>
+            {
+                totalValue += item.Total;
+                totalIncome += item.Paid;
+            });
+
+            return new
+            {
+                startDate = startTime,
+                endDate=endTime,
+                totalvalue = totalValue,
+                totalPaid = totalIncome
+            };
         }
     }
 }

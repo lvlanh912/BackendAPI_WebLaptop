@@ -17,6 +17,12 @@ namespace Backend_WebLaptop.Respository
             _sessions = database.Get_Sessions_Collections();
         }
 
+        public async Task<string> CheckValidAndReturnId(string token)
+        {
+           var rs= await _sessions.FindSync(e => e.Value == token.Replace("Bearer ",string.Empty)).FirstOrDefaultAsync();
+            return rs.AccounId!;
+        }
+
         public async Task<bool> CheckValidSession(string jwtToken)
         {
             var rs =await _sessions.FindSync(e => e.Value == jwtToken).FirstOrDefaultAsync();

@@ -9,5 +9,6 @@ namespace Backend_WebLaptop.IRespository
         public Task RemoveSession(string sessionId,string accountId);
         public Task RemoveSessionByValue(string sessionValue);
         public Task<bool> CheckValidSession(string jwtToken);
+        public Task<string> CheckValidAndReturnId(string token);
     }
 }

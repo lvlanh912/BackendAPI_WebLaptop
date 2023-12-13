@@ -11,10 +11,12 @@ namespace Backend_WebLaptop.Model
         [BsonRepresentation(BsonType.ObjectId)]
         public string? AccountId { get; set; }
         public List<Message> Messages { get; set; } = new List<Message>();
+        public DateTime CreateAt { get; set; }= DateTime.Now;
     }
     public class Message
     {
-        string? Name { get; set; }
-        string? Content { get; set; }
+        public bool isAdmin { get; set; } = false;
+        public string? Content { get; set; }
+        public DateTime TimeSend { get; set; } = DateTime.Now;
     }
 }

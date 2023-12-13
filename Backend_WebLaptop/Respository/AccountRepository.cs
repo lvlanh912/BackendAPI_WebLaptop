@@ -1,16 +1,16 @@
 ﻿using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
-using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using System.Xml.Linq;
 
 namespace Backend_WebLaptop.Respository
 {
     public class AccountRepository : IAccountRepository
     {
         private readonly IMongoCollection<Account>? _accounts;
+        private readonly IMongoCollection<Session>? _session;
+        private readonly IMongoCollection<ShippingAddress>? _shipping;
         private readonly IUploadImageRepository _upload;
         private readonly ICartRepository _carts;
         private readonly IAddressRepository _address;
@@ -22,6 +22,8 @@ namespace Backend_WebLaptop.Respository
             _accounts = databaseService.Get_Accounts_Collection();
             _order = databaseService.Get_Orders_Collection();
             _comment = databaseService.Get_Comments_Collection();
+            _session = databaseService.Get_Sessions_Collections();
+            _shipping = databaseService.Get_ShippingAddress_Collection();
             _upload = upload;
             _carts = carts;
             _address = address;
@@ -31,14 +33,14 @@ namespace Backend_WebLaptop.Respository
             var result = new PagingResult<Account>();
             List<Account> accounts;
             //filter
-            if (keywords != null&&type!=null)
+            if (keywords != null && type != null)
             {
                 accounts = type switch
                 {
-                    "fullname"=> await _accounts.Find(filter: e => e.Fullname!.Contains(keywords)).ToListAsync(),
-                    "email"=> await _accounts.Find(filter: e => e.Email!.Contains(keywords)).ToListAsync(),
-                    "address"=> await _accounts.Find(filter: e => e.Address!.Contains(keywords)).ToListAsync(),
-                    "phone"=> await _accounts.Find(filter: e => e.Phone!.Equals(keywords)).ToListAsync(),
+                    "fullname" => await _accounts.Find(filter: e => e.Fullname!.Contains(keywords)).ToListAsync(),
+                    "email" => await _accounts.Find(filter: e => e.Email!.Contains(keywords)).ToListAsync(),
+                    "address" => await _accounts.Find(filter: e => e.Address!.Contains(keywords)).ToListAsync(),
+                    "phone" => await _accounts.Find(filter: e => e.Phone!.Equals(keywords)).ToListAsync(),
                     _ => await _accounts.Find(filter: e => e.Username!.Contains(keywords) || e.Fullname!.Trim().Contains(keywords)).ToListAsync(),
                 };
             }
@@ -73,9 +75,20 @@ namespace Backend_WebLaptop.Respository
         public async Task<bool> DeletebyId(string id)
         {
             var rs = await _accounts.FindOneAndDeleteAsync(e => e.Id == id);
-            if (rs != null&&rs.ProfileImage!=null)
+            if (rs != null)
+            {
+                if (  rs.ProfileImage != null)
                 await _upload.Delete_Image(1, rs.ProfileImage);
-            await _carts.DeleteCart(id);
+                //xoá giỏ hàng, phiên đăng nhập, địa chỉ giao hàng
+                var task = new List<Task>
+                {
+                    _carts.DeleteCart(id),
+                    _session.DeleteManyAsync(e => e.AccounId == id),
+                     _shipping.DeleteManyAsync(e => e.AccountId == id)
+                };
+                await Task.WhenAll(task);
+            }
+
             return rs != null;
         }
 
@@ -95,27 +108,27 @@ namespace Backend_WebLaptop.Respository
             if (entity.Phone != null)
             {
                 var rs = await _accounts.FindSync(e => e.Phone == entity.Phone).FirstOrDefaultAsync();
-                    if(rs!=null) throw new Exception("Số điện thoại đã được sử dụng");
+                if (rs != null) throw new Exception("Số điện thoại đã được sử dụng");
             }
             if (string.IsNullOrEmpty(entity.Username)) throw new Exception("Tên đăng nhập Không được để trống");
             if (string.IsNullOrEmpty(entity.Password)) throw new Exception("Mật khẩu không được để trống");
             var V_username = await _accounts.FindSync(e => e.Username == entity.Username).FirstOrDefaultAsync();
-            if(V_username!=null)  throw new Exception("Tên người dùng đã được sử dụng");
+            if (V_username != null) throw new Exception("Tên người dùng đã được sử dụng");
 
             if (string.IsNullOrEmpty(entity.Email)) throw new Exception("Email Không được để trống");
             var V_email = await _accounts.FindSync(e => e.Email == entity.Email).FirstOrDefaultAsync();
-            if(V_email!=null) throw new Exception("Địa chỉ email đã được sử dụng");
+            if (V_email != null) throw new Exception("Địa chỉ email đã được sử dụng");
         }
 
         public async Task<Account> GetbyId(string id) => await _accounts.Find(e => e.Id == id).FirstOrDefaultAsync();
 
         public async Task<Account> Insert(ImageUpload<Account> entity)
         {
-            await  ValidateAccount(entity.Data!);
+            await ValidateAccount(entity.Data!);
             entity.Data!.Id = ObjectId.GenerateNewId(DateTime.Now).ToString();
             if (entity.Images != null && entity.Images.Count > 0)
                 entity.Data.ProfileImage = await _upload.UploadProfile_Image(entity);
-            if(entity.Data.Address!=null)
+            if (entity.Data.Address != null)
                 entity.Data.Address += '-' + await _address.GetAddress(entity.Data.WardId!);
             await _accounts!.InsertOneAsync(entity.Data);
             //khởi tạo giỏ hàng
@@ -174,7 +187,7 @@ namespace Backend_WebLaptop.Respository
             if (entity.Images!.Count != 0)
             {
                 var update = Builders<Account>.Update.Set(e => e.ProfileImage, await _upload.UploadProfile_Image(entity));
-                 await _accounts.UpdateOneAsync(e => e.Id == entity.Data!.Id, update);
+                await _accounts.UpdateOneAsync(e => e.Id == entity.Data!.Id, update);
             }
         }
 
@@ -197,7 +210,7 @@ namespace Backend_WebLaptop.Respository
 
         public async Task<Account> GetPublicInfor(string accountId)
         {
-            var result =await _accounts.FindSync(e => e.Id == accountId).FirstOrDefaultAsync();
+            var result = await _accounts.FindSync(e => e.Id == accountId).FirstOrDefaultAsync();
             return result != null ? result.GetPublicInfor() : throw new Exception("Not valid user");
         }
     }

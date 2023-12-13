@@ -23,6 +23,15 @@ namespace Backend_WebLaptop.Controllers
             _cart = cart;
             _session = session;
         }
+
+        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpGet("isAdmin")]
+        public ActionResult CheckAdmin()
+        {
+            return StatusCode(200, new ResponseApi<bool> { Result = true });
+        }
+
         [Authorize(Roles = "Admin")]
         [ServiceFilter(typeof(SessionAuthor))]
         [HttpGet]
@@ -183,7 +192,6 @@ namespace Backend_WebLaptop.Controllers
             {
                 var accounId = HttpContext.User.FindFirst("Id")!.Value;
                 var result = await _i.GetbyId(accounId);
-                result.Password = null;
                 return StatusCode(200, new ResponseApi<Account> { Message = "thành công",Result=result});
             }
             catch (Exception ex)

@@ -28,6 +28,20 @@ namespace Backend_WebLaptop.IRespository
         /// <param name="endtime"></param>
         /// <returns></returns>
         Task<object> GetOrderStatistic();
+        /// <summary>
+        /// Get total order in month (max 12 month)
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
         Task<List<long>> GetOrderPerMonth(DateTime startTime, DateTime endTime);
+        /// <summary>
+        /// Return total value order end paied order in time
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        Task<object> GetRevenue(DateTime startTime, DateTime endTime);
+
     }
 }

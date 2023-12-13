@@ -4,15 +4,19 @@ using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Respository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
-
 builder.Services.AddControllers();
+builder.Services.AddSignalR(e => {
+    e.MaximumReceiveMessageSize = 102400000;
+});
 builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+builder.Services.AddLogging();
 builder.Services.Configure<DatabaseConfig>(
     builder.Configuration.GetSection("Database")
 );
@@ -21,13 +25,13 @@ builder.Services.Configure<AuthenticationConfig>(
 );
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(
-        policy =>
-        {
-            policy.AllowAnyMethod();
-            policy.AllowAnyOrigin();
-            policy.WithOrigins("http://localhost:5173");
-        });
+    options.AddPolicy("MyCorsPolicy",
+        builder => builder
+                           .AllowAnyMethod()
+                           .AllowAnyHeader()
+                           .SetIsOriginAllowed(origin => true)
+                           .AllowCredentials()
+                          );
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -45,6 +49,7 @@ builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
 builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 builder.Services.AddScoped<IStatisticRepository, StatisticRepository>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
 //Đăng ký dịch vụ kiểm tra session
 builder.Services.AddScoped<SessionAuthor>();
 //builder.Services.AddScoped<IStatusOrderingRepository, StatusOrderingRepository>();
@@ -57,6 +62,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+
 }).AddJwtBearer(o =>
 {
     o.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
@@ -70,32 +76,50 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ClockSkew = TimeSpan.Zero
     };
+    o.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+
+            // If the request is for our hub...
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) &&
+                (path.StartsWithSegments("/Hub")))
+            {
+                // Read the token out of the query string
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 
-
+builder.Services.AddSignalR();
 
 var app = builder.Build();
-
-app.UseCors(builder =>
-    builder.SetIsOriginAllowed(_ => true)
-        .AllowAnyMethod()
-        .AllowAnyHeader()
-        .AllowCredentials());
-
+app.UseHttpsRedirection();
+app.UseCors("MyCorsPolicy");
+app.UseStaticFiles(new StaticFileOptions()
+{
+    OnPrepareResponse = ctx => {
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+        ctx.Context.Response.Headers.Append("Content-Type", "image/jpeg");
+        ctx.Context.Response.Headers.Append("Accept-Ranges", "bytes");
+    },
+});
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseStaticFiles();
-app.UseCors();
 
-app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
+app.MapHub<HubRepository>("Hub");
 
 app.Run();

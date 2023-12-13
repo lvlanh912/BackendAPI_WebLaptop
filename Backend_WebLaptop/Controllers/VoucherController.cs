@@ -15,6 +15,7 @@ namespace Backend_WebLaptop.Controllers
             _i = i;
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpGet]
         public async Task<ActionResult> Getall(string? keywords,DateTime? createTimeStart, DateTime? createTimeEnd, bool? active, string? sort, int pageindex = 1, int pagesize = 10)
         {
@@ -50,6 +51,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpGet("{id}")]
         public async Task<ActionResult> Getbyid(string id)
         {
@@ -85,6 +87,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpPost]
         public async Task<ActionResult> Insert_new(Voucher entity)
         {
@@ -102,6 +105,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(string id, Voucher entity)
         {
@@ -119,6 +123,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpPost("disable")]
         public async Task<ActionResult> Disable(string voucherId)
         {
@@ -136,6 +141,7 @@ namespace Backend_WebLaptop.Controllers
             }
         }
         [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {
