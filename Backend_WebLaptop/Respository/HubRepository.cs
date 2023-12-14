@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using System;
 
 namespace Backend_WebLaptop.Respository
 {
@@ -18,6 +19,9 @@ namespace Backend_WebLaptop.Respository
             _chat = chat;
             _session = session;
         }
+
+        
+
         public override Task OnConnectedAsync()
         {
             string userId = Context.User?.FindFirst("Id")?.Value!;
@@ -76,11 +80,33 @@ namespace Backend_WebLaptop.Respository
                 //Gửi thông điệp cho Client
                 await Clients.Client(ConnectionId).SendAsync("ReceiveMessage", chat);
             }
-           
+        }
 
+        [Authorize(Roles = "Admin")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task AdminDisconnectChat(string userId)
+        {
+            if (ListUserConected.TryGetValue(userId, out var ConnectionId))
+            {
+                //Gửi thông điệp cho user
+                await Clients.Client(ConnectionId).SendAsync("Disconnect");
+            }
+            //xoá chat trên database
+            await _chat.DeleteChat(userId);
+        }
 
-
-
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task UserDisconnectChat()
+        {
+            var accounId = Context.User!.FindFirst("Id")!.Value;
+            if (ListUserConected.TryGetValue("Admin", out var ConnectionId))
+            {
+                //Gửi thông điệp cho admin
+                await Clients.Client(ConnectionId).SendAsync("Disconnect",accounId);
+            }
+            //xoá chat trên database
+            await _chat.DeleteChat(accounId);
         }
     }
 }

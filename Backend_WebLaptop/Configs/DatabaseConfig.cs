@@ -23,10 +23,5 @@
         public string? ChatsCollections { get; set; }
 
     }
-    public class AuthenticationConfig
-    {
-        public string? SecretKey { get; set; }
-      
-
-    }
+   
 }

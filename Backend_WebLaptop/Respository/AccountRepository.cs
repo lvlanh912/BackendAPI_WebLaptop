@@ -3,6 +3,7 @@ using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Text.RegularExpressions;
 
 namespace Backend_WebLaptop.Respository
 {
@@ -212,6 +213,28 @@ namespace Backend_WebLaptop.Respository
         {
             var result = await _accounts.FindSync(e => e.Id == accountId).FirstOrDefaultAsync();
             return result != null ? result.GetPublicInfor() : throw new Exception("Not valid user");
+        }
+
+        public async Task ChangePassword(string accountId, string oldpassword, string newpassword)
+        {
+            //validate newpassword
+           if(!ValidatePassword(newpassword))
+                throw new Exception("Mật khẩu mới không hợp lệ");
+            var account = await _accounts.FindSync(e => e.Id == accountId && e.Password == oldpassword).FirstOrDefaultAsync();
+            if(account is not null)
+            {
+                var update = Builders<Account>.Update.Set(e => e.Password, newpassword);
+                await _accounts.UpdateOneAsync(e => e.Id == accountId, update);
+            }
+            else
+                throw new Exception("Mật khẩu cũ không chính xác");
+        }
+        bool ValidatePassword(string pass)
+        {
+            var regex = new Regex("^^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$");
+            if (regex.IsMatch(pass))
+                return true;
+            return false;
         }
     }
 }

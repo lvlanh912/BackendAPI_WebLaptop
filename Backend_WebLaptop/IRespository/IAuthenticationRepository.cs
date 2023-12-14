@@ -9,11 +9,9 @@ namespace Backend_WebLaptop.IRespository
         /// Login and create jwt token role=1 is user role=2 is admin
         /// </summary>
         /// <returns></returns>
-        Task<string> Createtoken(Account entity, string browser,string ipaddress, int role);
-        /// <summary>
-        /// Check token in database if valid
-        /// </summary>
-        /// <returns>true or false</returns>
-        Task<bool> CheckValidToken(string jwttoken);
+        Task<string> CreatetokenForUser(Account entity, string browser,string ipaddress, int role);
+
+        Task<string> CreateTokenForResetPassword(string email);
+        Task<string> ResetPassword(string accessToken);
     }
 }

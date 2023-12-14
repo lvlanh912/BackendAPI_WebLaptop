@@ -12,8 +12,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
-builder.Services.AddSignalR(e => {
-    e.MaximumReceiveMessageSize = 102400000;
+builder.Services.AddSignalR(o =>
+{
+    o.EnableDetailedErrors = true;
+    o.MaximumReceiveMessageSize = 102400000;
 });
 builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 builder.Services.AddLogging();
@@ -96,7 +98,6 @@ builder.Services.AddAuthentication(options =>
 });
 
 
-builder.Services.AddSignalR();
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -120,6 +121,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.UseWebSockets();
 app.MapHub<HubRepository>("Hub");
 
 app.Run();

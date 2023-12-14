@@ -4,6 +4,8 @@ using Backend_WebLaptop.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Text.Json;
 using UAParser;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -313,6 +315,45 @@ namespace Backend_WebLaptop.Controllers
                     Result = await _i.GetPublicInfor(accountId)
 
                 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<bool> { Message = ex.Message, Result = false });
+            }
+        }
+
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        [HttpPost("change-password")]
+        public async Task<ActionResult> ChangePassword( dynamic Json)
+        {
+            try
+            {
+                var password=string.Empty;
+                var newpassword=string.Empty;
+                //kiểm tra loại dữ liệu nhận
+                if (Json.ValueKind != JsonValueKind.Object)
+                    throw new Exception("Invalid data");
+
+                if (Json.TryGetProperty("password", out JsonElement passwordElement))
+                    password = passwordElement.GetString()??throw new Exception("Invalid data");
+
+                if(Json.TryGetProperty("newpassword", out JsonElement newpasswordElement))
+                    newpassword = newpasswordElement.GetString() ?? throw new Exception("Invalid data");
+
+               
+                if(!string.IsNullOrEmpty(password)&& !string.IsNullOrEmpty(newpassword))
+                {
+                    var accounId = HttpContext.User.FindFirst("Id")!.Value;
+                    await _i.ChangePassword(accounId, password, newpassword);
+                    return StatusCode(200, new ResponseApi<bool>
+                    {
+                        Message = "thành công",
+                        Result = true
+
+                    });
+                }
+                throw new Exception("Invalid data");
             }
             catch (Exception ex)
             {

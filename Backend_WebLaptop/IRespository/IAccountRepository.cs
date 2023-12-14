@@ -8,6 +8,7 @@ namespace Backend_WebLaptop.IRespository
         Task<Account> GetbyId(string id);
         Task<bool> DeletebyId(string id);
         Task<Account> Insert(ImageUpload<Account> entity);
+        Task ChangePassword(string accountId, string oldpassword, string newpassword);
         Task<Account> Update(ImageUpload<Account> entity);
         Task<bool> Exits(string id);
         Task<bool> ExitsByUserName(string username);

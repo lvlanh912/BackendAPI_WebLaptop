@@ -16,9 +16,9 @@ namespace Backend_WebLaptop.Respository
             _chat = databaseService.Get_Chats_Collections();
         }
 
-        public Task DeleteAllChat(string accountId)
+        public async Task DeleteChat(string accountId)
         {
-            throw new NotImplementedException();
+            await _chat.DeleteOneAsync(e => e.AccountId == accountId);
         }
 
         public async Task<PagingResult<Chat>> GetAllChat(int pageindex, int pagesize,string sort)
@@ -39,7 +39,6 @@ namespace Backend_WebLaptop.Respository
                 TotalCount = result.Count
             };
         }
-
         public Task SendMessageToUser(string accountId, string message)
         {
             throw new NotImplementedException();

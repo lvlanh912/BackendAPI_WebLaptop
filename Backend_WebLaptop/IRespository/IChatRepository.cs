@@ -5,7 +5,7 @@ namespace Backend_WebLaptop.IRespository
     public interface IChatRepository
     {
         public Task<Message> AddChat(string accountId, string message,bool isAdmin);
-        public Task DeleteAllChat(string accountId);
+        public Task DeleteChat(string accountId);
         public Task SendMessageToUser(string accountId, string message);
         /// <summary>
         /// Return all chat
