@@ -25,6 +25,7 @@ namespace Backend_WebLaptop.IRespository
 
         Task<long> Get_toltalSell(DateTime? start, DateTime? end);
         Task<long> Get_CountPending();
+        Task CancelOrder(string userId, string orderId);
 
         Task<Order> Checkout(Order entity);
 

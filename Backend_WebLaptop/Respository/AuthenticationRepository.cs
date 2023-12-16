@@ -9,26 +9,42 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
-using System;
+using System.Timers;
 using System.ComponentModel;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using UAParser;
+using Timer = System.Timers.Timer;
+using System.Threading;
+using Amazon.Runtime.Internal;
 
 namespace Backend_WebLaptop.Respository
 {
+    class CodeBag
+    {
+        public DateTime Timeout { get; set; }
+        public int OTP { get; set; }
+    }
     public class AuthenticationRepository : IAuthenticationRepository
     {
         private readonly static IDictionary<string, bool> TimesUseJWT = new Dictionary<string, bool>();
+        private readonly static IDictionary<string, CodeBag> emailPendingConfirm = new Dictionary<string, CodeBag>();
+        private readonly static Timer timer = new() { Interval = 600 };//10 phút
         private readonly IMongoCollection<Account>? _accounts;
         private readonly ISessionRepository _session;
         private readonly string? _sercretKey;
-        public AuthenticationRepository(IDatabaseService database, ISessionRepository session, IOptions<AuthenticationConfig> authenticationConfig)
+        private readonly IEmailSendRepository _email;
+        private readonly FrontendConfig _frontendConfig;
+        public AuthenticationRepository(IDatabaseService database, ISessionRepository session, IEmailSendRepository email,
+            IOptions<AuthenticationConfig> authenticationConfig , IOptions<FrontendConfig> Fronendconfig)
         {
             _session = session;
             _accounts = database.Get_Accounts_Collection();
             _sercretKey = authenticationConfig.Value.SecretKey;
+            _email = email;
+            _frontendConfig = Fronendconfig.Value;
+            timer.Elapsed += AutoCleanEmailPending!;
         }
 
         public async Task<string> CreatetokenForUser(Account entity, string browser, string ipaddress,int role)
@@ -70,7 +86,7 @@ namespace Backend_WebLaptop.Respository
             return result;
         }
 
-        public async Task<string> CreateTokenForResetPassword(string email)
+        public async Task SendLinkResetPassword(string email)
         {
             var account = await _accounts.FindSync(e => e.Email == email&&e.Role!=2).FirstOrDefaultAsync();
             if(account is not null)
@@ -90,39 +106,40 @@ namespace Backend_WebLaptop.Respository
                       null,
                       null,
                       claims,
-                      expires: DateTime.UtcNow.AddMinutes(1),//thời hạn 10 phút
+                      expires: DateTime.UtcNow.AddMinutes(10),//thời hạn 10 phút
                       signingCredentials: signIn);
                 string rs= new JwtSecurityTokenHandler().WriteToken(token);
                 TimesUseJWT[account.Id!] = true;//thêm lượt sửa dụng, ghi đè nếu đã có
-                return rs;
+                await _email.Sendmail(account.Email!, "Đặt lại mật khẩu của bạn",$"Xin chào! Đây là đường dẫn đặt lại mật khẩu của bạn, sẽ hết hạn sau 10 phút {_frontendConfig.Host+ _frontendConfig.ForgotPasswordPage+rs}");
             }
-            throw new Exception("Không tồn tại tài khoản với email này");
+            else
+
+                throw new Exception("Không tồn tại tài khoản với email này");
+            
         }
 
-        public async Task<string> ResetPassword(string accessToken)
+        public async Task ResetPassword(string accessToken)
         {
-            try
-            {
+    
                 var accountId = ValidateToken(accessToken);
                 if(TimesUseJWT.TryGetValue(accountId, out var times))
                 {
                     //Đổi password
                     var password = RandomPassword();
                     var Update = Builders<Account>.Update.Set(e => e.Password, password);
-                    await _accounts.UpdateOneAsync(e => e.Id == accountId, Update);
+                    var account= await _accounts.FindOneAndUpdateAsync(e => e.Id == accountId, Update);
                     TimesUseJWT.Remove(accountId);
                     //gửi email
-                    return password;
+                    await _email.Sendmail(account.Email!, "Mật khẩu đã thay đổi", $"Xin chào {account.Fullname} ({account.Username}) mật khẩu mới của bạn là : {password}");
                 }
-                throw new Exception("Đã được sử dụng");
-                
-            }
-            catch
-            {
-                throw new Exception("Không hợp lệ");
-            }
+                else
+                {
+                    throw new Exception("Đã được sử dụng trước đó");
+                }
+              
         }
-        string RandomPassword()
+
+        static string RandomPassword()
         {
             var size = new Random().Next(8, 12);
             string validChars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*?_-";//72 character
@@ -142,16 +159,56 @@ namespace Backend_WebLaptop.Respository
                 ClockSkew = TimeSpan.Zero // You can adjust the acceptable clock skew here
             };
             var tokenHandler = new JwtSecurityTokenHandler();
-            ClaimsPrincipal principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var validatedToken);
+            ClaimsPrincipal principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out _);
             var userId = principal.FindFirst("Id")!.Value;
-            var email = principal.FindFirst("Email")!.Value;
-            /*long unixTimestamp = ConvertToUnixTimestamp(DateTime.Now);
-            if (Convert.ToInt64(exp) < unixTimestamp)
-            {
-                throw new Exception("Link đã hết hạn");
-            }
-            var email = claim.Claims.First(c => c.Type == "Email").Value;*/
+            //var email = principal.FindFirst("Email")!.Value;
+           
             return userId;
+        }
+
+        public async Task GetConfirmEmail(string email)
+        {
+            //kiểm tra có email trước đó không,nếu có và đã hết hạn thì thay thế
+            if (emailPendingConfirm.TryGetValue(email, out var time))
+                if (time.Timeout < DateTime.Now)
+                    emailPendingConfirm.Remove(email);
+                else
+                    throw new Exception("Mã đã được gửi trước đó hãy kiểm tra email");
+            var OTP = new Random().Next(100000, 999999);
+            await _email.Sendmail(email, "Xác thực đăng ký tài khoản - Ecomerce Website Lvlanh", $"Mã xác nhận của bạn là: {OTP} (Hiệu lực 5 phút)");
+            emailPendingConfirm.Add(email, new CodeBag { OTP=OTP,Timeout=DateTime.Now.AddMinutes(5)});
+            //chạy timer
+            if (!timer.Enabled)
+                timer.Enabled = true;
+
+        }
+        //tự động làm sạch danh sách email chờ đã hết hạn
+        void AutoCleanEmailPending(object sender, EventArgs e)
+        {
+            lock (emailPendingConfirm)
+            {
+                //nếu có danh sách
+                if (emailPendingConfirm.Count > 0)
+                    foreach (var item in emailPendingConfirm)
+                    {
+                        if (item.Value.Timeout <= DateTime.Now)
+                            emailPendingConfirm.Remove(item);
+                    }
+                else
+                    timer.Enabled = false;
+            }
+        }
+
+        public Task<bool> ConfirmEmail(string? email, int otp)
+        {
+            if (email is null)
+                throw new Exception("Vui lòng nhập địa chỉ email");
+            lock (emailPendingConfirm)
+            {
+               if(emailPendingConfirm.TryGetValue(email,out var value))
+                    return Task.FromResult(otp == value.OTP);
+            }
+            return Task.FromResult(false);
         }
 
 

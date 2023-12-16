@@ -1,9 +1,11 @@
 ﻿
 using Backend_WebLaptop.Configs;
+using Backend_WebLaptop.Configs.OnlinePayment;
 using Backend_WebLaptop.Database;
 using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Respository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -22,8 +24,17 @@ builder.Services.AddLogging();
 builder.Services.Configure<DatabaseConfig>(
     builder.Configuration.GetSection("Database")
 );
+builder.Services.Configure<MailConfig>(
+    builder.Configuration.GetSection("EmailConfig")
+);
 builder.Services.Configure<AuthenticationConfig>(
     builder.Configuration.GetSection("Authentication")
+);
+builder.Services.Configure<FrontendConfig>(
+    builder.Configuration.GetSection("Frontend")
+);
+builder.Services.Configure<VNPayconfig>(
+    builder.Configuration.GetSection("OnlinePayment:VnPay")
 );
 builder.Services.AddCors(options =>
 {
@@ -38,7 +49,9 @@ builder.Services.AddCors(options =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddTransient<IEmailSendRepository, EmailSendRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentOnlineRepository, PaymentOnlineRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IShippingAddressRepository, ShippingAddressRepository>();

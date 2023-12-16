@@ -1,7 +1,9 @@
 ﻿using Backend_WebLaptop.IRespository;
 using Backend_WebLaptop.Model;
+using Backend_WebLaptop.Model.OnlinePayment.VNPAY;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace Backend_WebLaptop.Controllers
 {
@@ -10,9 +12,11 @@ namespace Backend_WebLaptop.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IOrderRepository _i;
-        public OrderController(IOrderRepository i)
+        private readonly IPaymentOnlineRepository _paymentOnline;
+        public OrderController(IOrderRepository i, IPaymentOnlineRepository paymentOnline)
         {
             _i = i;
+            _paymentOnline = paymentOnline;
         }
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -145,12 +149,51 @@ namespace Backend_WebLaptop.Controllers
             try
             {
                 var accountId = HttpContext.User.FindFirst("Id")!.Value;
+                IPAddress ipAddress = IPAddress.Parse(Request.HttpContext.Request.Headers["X-Forwarded-For"]);
+
+                /*  string ip = HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+                  if (string.IsNullOrEmpty(ip))
+                  {
+                      ip = Current.Request.ServerVariables["REMOTE_ADDR"];
+                  }*/
                 entity.AccountId = accountId;
+                if (entity.PaymentMethod != null)
+                {
+                    return StatusCode(200, new ResponseApi<string>
+                    {
+                        Result =await _paymentOnline.CreatePaymentLinkVNPay(await _i.CreateOrder(entity, false),ipAddress.ToString()),
+                        Message = "Đặt hàng thành công, đang chờ thanh toán"
+                    });
+                }
                 return StatusCode(201, new ResponseApi<Order>
                 {
                     Result = await _i.CreateOrder(entity, false),
                     Message = "Đặt hàng thành công"
                 });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                });
+            }
+        }
+
+        [HttpPatch("cancel-order")]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task<ActionResult> CancelOrder(string orderid)
+        {
+            try
+            {
+                var accountId = HttpContext.User.FindFirst("Id")!.Value;
+                await _i.CancelOrder(accountId, orderid);
+                return StatusCode(200, new ResponseApi<bool>
+                {
+                    Result =true ,
+                    Message = "Thành công"
+                }) ;
             }
             catch (Exception ex)
             {
@@ -183,6 +226,57 @@ namespace Backend_WebLaptop.Controllers
                     Message = ex.Message
                 });
             }
+        }
+        
+        [HttpPost("vnpay-transaction")]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task<ActionResult> CheckVNPayment(VNPayResponse payload)
+        {
+            try
+            {
+                // var accountId = HttpContext.User.FindFirst("Id")!.Value;
+                return StatusCode(200, new ResponseApi<bool>
+                {
+                    Result = true,
+                    Message = await _paymentOnline.CheckPaymentVNPay(payload)
+                });
+            }
+
+            catch (Exception ex)
+            {
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                });
+            }
+        }
+        
+        [HttpGet("vnpay-getlink")]
+        [Authorize(Roles = "Member")]
+        [ServiceFilter(typeof(SessionAuthor))]
+        public async Task<ActionResult> RegetLinkVNPay(string orderId)
+        {
+            try
+            {
+                var accountId = HttpContext.User.FindFirst("Id")!.Value;
+                IPAddress ipAddress = IPAddress.Parse(Request.HttpContext.Request.Headers["X-Forwarded-For"]);
+                return StatusCode(200, new ResponseApi<string>
+                {
+                    Result = await _paymentOnline.RegetLinkVNPay(orderId,accountId, ipAddress.ToString()),
+                    Message = "Thành công"
+                });
+            }
+
+            catch (Exception ex)
+            {
+                
+                return BadRequest(new ResponseApi<string>
+                {
+                    Message = ex.Message
+                });
+            }
+          
         }
     }
 }

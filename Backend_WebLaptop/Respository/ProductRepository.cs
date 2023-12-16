@@ -199,7 +199,7 @@ namespace Backend_WebLaptop.Respository
 
         public async Task RestoreItem(string productid, int quantity)
         {
-            var update = Builders<Product>.Update.Inc(e => e.Sold, -1).Inc(e => e.Stock, -1);
+            var update = Builders<Product>.Update.Inc(e => e.Sold, (quantity*-1)).Inc(e => e.Stock, quantity);
            await _products.UpdateOneAsync(e => e.Id == productid, update);
         }
 

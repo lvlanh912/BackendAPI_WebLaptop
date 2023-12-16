@@ -4,30 +4,34 @@ using Backend_WebLaptop.Model;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
+using Timer = System.Timers.Timer;
 
 namespace Backend_WebLaptop.Respository
 {
     public class OrderRepository : IOrderRepository
     {
         private readonly IMongoCollection<Order> _orders;
-        private readonly IPaymentRepository _payments;
-        private readonly IAccountRepository _accounts;
+        private readonly IMongoCollection<Payment> _payments; 
+       // private readonly IAccountRepository _accounts;
         private readonly IVoucherRepository _vouchers;
         private readonly IProductRepository _products;
         private readonly IShippingAddressRepository _shippingaddress;
 
-        public OrderRepository(IDatabaseService databaseService, IPaymentRepository payments, IAccountRepository accounts
-            , IVoucherRepository voucher, IProductRepository products, IShippingAddressRepository shippingaddress
+        public OrderRepository(IDatabaseService databaseService, IVoucherRepository voucher, IProductRepository products, IShippingAddressRepository shippingaddress
             )
         {
             _orders = databaseService.Get_Orders_Collection();
-            _payments = payments;
-            _accounts = accounts;
+            _payments = databaseService.Get_Payments_Collections();
+            //_accounts = accounts;
             _vouchers = voucher;
             _products = products;
             _shippingaddress = shippingaddress;
+            
 
         }
+        //tự động làm sạch danh sách email chờ đã hết hạn
+       
+
         //Kiểm tra đơn hàng
         public async Task<Order> Checkout(Order entity)
         {
@@ -49,8 +53,7 @@ namespace Backend_WebLaptop.Respository
             //Fillter
             var filter = Builders<Order>.Filter;
             var builderFilter = filter.Empty;
-            //var project = Builders<Order>.Projection.Slice("Status", -1);
-            //&= là toán tử and
+            //&= là toán tử and thêm điều kiện lọc
             if (accountid != null)
                 builderFilter &= filter.Eq(e => e.AccountId, accountid);
             if (isPaid != null)
@@ -75,8 +78,6 @@ namespace Backend_WebLaptop.Respository
                 "total"=> orders.OrderBy(e => e.Total).ToList(),
                 "total_desc" => orders.OrderByDescending(e => e.Total).ToList(),
                 _ => orders.OrderByDescending(e=>e.CreateAt).ToList(),
-               
-
             } ;
             return new PagingResult<Order>
             {
@@ -117,12 +118,6 @@ namespace Backend_WebLaptop.Respository
             var curent = await GetOrderbyId(id);
             if (curent.Status!.Code != 0)
                 throw new Exception("Chỉ cho phép xoá đơn hàng đã huỷ");
-            //Hoàn số lượng sản phẩm trong đơn
-            var listtask = new List<Task>();
-            foreach (var item in curent.Items)
-                listtask.Add(_products.RestoreItem(item.Product!.Id!, item.Quantity));
-            if (listtask.Count > 0)
-               await Task.WhenAll(listtask.ToArray());
             return _orders.DeleteOne(e => e.Id == id).DeletedCount>0;
              
         }
@@ -130,14 +125,26 @@ namespace Backend_WebLaptop.Respository
         public async Task<bool> EditOrder(string id, int? status, ShippingAddress? shippingAddress,bool? ispaid)
         {
             var update = Builders<Order>.Update.Combine();
-
             if (shippingAddress != null)
                update= update.Set(e => e.ShippingAddress, shippingAddress);
             if (ispaid != null)
                 update= update.Set(e => e.IsPaid, ispaid);
             if (status != null)
             {
+                var curent = await _orders.FindSync(e => e.Id == id).FirstOrDefaultAsync() ?? throw new Exception("Đơn hàng không tồn tại");
+                //trường hợp đổi từ đã huỷ sang trạng thái khác-->không cho phép
+                if (curent.Status!.Code == 0 && status != 0) throw new Exception("Không cho phép chỉnh sửa từ huỷ sang trạng thái khác");
                 update = update.Set(e => e.Status, new Shipping((int)status));
+                if (status == 0)//nếu huỷ đơn hàng thì hoàn lại số lượng hàng
+                {
+                    //Hoàn số lượng sản phẩm trong đơn
+                    var listtask = new List<Task>();
+                    foreach (var item in curent.Items)
+                        listtask.Add(_products.RestoreItem(item.Product!.Id!, item.Quantity));
+                    if (listtask.Count > 0)
+                        await Task.WhenAll(listtask.ToArray());
+                }
+                
                 if(status==3)//nếu trạng thái đơn hàng đã hoàn thành thì tự động cập nhật trạng thái thanh toán
                     update = update.Set(e => e.IsPaid, true);
             }
@@ -168,17 +175,15 @@ namespace Backend_WebLaptop.Respository
             //kiểm tra phương thức thanh toán
             if (entity.PaymentMethod != null )
             {
-                //nếu phương thức thanh toán là phương thức thanh toán khi nhận hàng trong collections payment
-                if (entity.PaymentMethod.Id == "6560602d2a79e5d1c1b3905b")
-                    entity.PaymentMethod = null;
-                else
+
+                entity.PaymentMethod = entity.PaymentMethod.Id switch
                 {
-                    var payment = await _payments.GetbyId(entity.PaymentMethod.Id!) ??
-                        throw new Exception("Phương thức thanh toán không hợp lệ");
-                    if (!payment.Active) throw new Exception("Phương thức thanh toán không hoạt động");
-                        throw new Exception("Phương thức thanh toán chưa hoạt động");
-                    // entity.PaymentMethod = payment;
-                }
+                    //VNPay
+                    "657c325eba6b3a5987d8cff3"=> await _payments.FindSync(e=>e.Id== "657c325eba6b3a5987d8cff3"&&e.Active).FirstOrDefaultAsync()??
+                     throw new Exception("Phương thức thanh toán không hoạt động"),
+
+                    _ => throw new Exception("Phương thức thanh toán không hợp lệ")
+                };
             }
 
             //Kiểm tra voucher
@@ -297,6 +302,22 @@ namespace Backend_WebLaptop.Respository
                 );
             var result = await _orders.FindSync(filter).FirstOrDefaultAsync();
             return result is not null;
+        }
+
+        public async Task CancelOrder(string userId, string orderId)
+        {
+            
+            var update = Builders<Order>.Update.Set(e => e.Status, new Shipping(0));
+          var result=  await _orders.UpdateOneAsync(e => e.Id == orderId && e.AccountId == userId,update);
+            if (result.ModifiedCount == 0) throw new Exception("Đơn hàng không tồn tại");
+            var current = await _orders.FindSync(e => e.Id == orderId).FirstOrDefaultAsync();
+            var task = new List<Task>();
+            foreach (var item in current.Items)
+            {
+                task.Add(_products.RestoreItem(item.Product!.Id!, item.Quantity!));
+            }
+           await Task.WhenAll(task);
+          
         }
     }
 }

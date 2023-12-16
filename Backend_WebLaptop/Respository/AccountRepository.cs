@@ -17,9 +17,11 @@ namespace Backend_WebLaptop.Respository
         private readonly IAddressRepository _address;
         private readonly IMongoCollection<Order>? _order;
         private readonly IMongoCollection<Comment>? _comment;
+        private readonly IMongoCollection<Chat> _chat;
 
         public AccountRepository(IDatabaseService databaseService, IUploadImageRepository upload, ICartRepository carts, IAddressRepository address)
         {
+            _chat = databaseService.Get_Chats_Collections();
             _accounts = databaseService.Get_Accounts_Collection();
             _order = databaseService.Get_Orders_Collection();
             _comment = databaseService.Get_Comments_Collection();
@@ -80,12 +82,14 @@ namespace Backend_WebLaptop.Respository
             {
                 if (  rs.ProfileImage != null)
                 await _upload.Delete_Image(1, rs.ProfileImage);
-                //xoá giỏ hàng, phiên đăng nhập, địa chỉ giao hàng
+                //xoá bình luận, xoá giỏ hàng, phiên đăng nhập, địa chỉ giao hàng, xoá chat
                 var task = new List<Task>
                 {
+                    _comment.DeleteManyAsync(e=>e.AccountId==id),
                     _carts.DeleteCart(id),
                     _session.DeleteManyAsync(e => e.AccounId == id),
-                     _shipping.DeleteManyAsync(e => e.AccountId == id)
+                     _shipping.DeleteManyAsync(e => e.AccountId == id),
+                     _chat.DeleteManyAsync(e=>e.AccountId==id)
                 };
                 await Task.WhenAll(task);
             }
@@ -117,6 +121,7 @@ namespace Backend_WebLaptop.Respository
             if (V_username != null) throw new Exception("Tên người dùng đã được sử dụng");
 
             if (string.IsNullOrEmpty(entity.Email)) throw new Exception("Email Không được để trống");
+
             var V_email = await _accounts.FindSync(e => e.Email == entity.Email).FirstOrDefaultAsync();
             if (V_email != null) throw new Exception("Địa chỉ email đã được sử dụng");
         }
@@ -229,7 +234,8 @@ namespace Backend_WebLaptop.Respository
             else
                 throw new Exception("Mật khẩu cũ không chính xác");
         }
-        bool ValidatePassword(string pass)
+
+        static bool ValidatePassword(string pass)
         {
             var regex = new Regex("^^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$");
             if (regex.IsMatch(pass))

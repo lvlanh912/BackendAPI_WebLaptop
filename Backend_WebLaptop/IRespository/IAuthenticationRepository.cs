@@ -11,7 +11,9 @@ namespace Backend_WebLaptop.IRespository
         /// <returns></returns>
         Task<string> CreatetokenForUser(Account entity, string browser,string ipaddress, int role);
 
-        Task<string> CreateTokenForResetPassword(string email);
-        Task<string> ResetPassword(string accessToken);
+        Task SendLinkResetPassword(string email);
+        Task ResetPassword(string accessToken);
+        Task GetConfirmEmail(string email);
+        Task<bool> ConfirmEmail(string? email,int otp);
     }
 }
