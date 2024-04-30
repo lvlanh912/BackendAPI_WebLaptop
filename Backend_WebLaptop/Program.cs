@@ -39,10 +39,11 @@ builder.Services.Configure<VNPayconfig>(
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyCorsPolicy",
-        builder => builder.WithOrigins("http://localhost:5173","https://5173-cs-3339b1ce-3180-410e-90e7-cb3e72a03e34.cs-asia-east1-vger.cloudshell.dev")
+        builder => builder
                            .AllowAnyMethod()
                            .AllowAnyHeader()
-                            .AllowAnyOrigin()
+                           .SetIsOriginAllowed(origin => true)
+                           .AllowCredentials()
                           );
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
