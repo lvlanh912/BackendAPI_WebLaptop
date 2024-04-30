@@ -39,7 +39,7 @@ builder.Services.Configure<VNPayconfig>(
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyCorsPolicy",
-        builder => builder
+        builder => builder.WithOrigins("http://localhost:5173")
                            .AllowAnyMethod()
                            .AllowAnyHeader()
                             .AllowAnyOrigin()
